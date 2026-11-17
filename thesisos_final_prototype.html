@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThesisOS | Thesis Management & Counter-Analyst OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&family=Heebo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Assistant', 'Heebo', 'sans-serif'],
+                        display: ['Heebo', 'Assistant', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        canvas: '#FAFAFA',
+                        surface: '#FFFFFF',
+                        ink: '#0F172A',
+                        muted: '#64748B',
+                        hairline: '#E2E8F0',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #FAFAFA;
+            color: #0F172A;
+            font-family: 'Assistant', 'Heebo', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        html.dark body {
+            background-color: #0B0F19;
+            color: #F1F5F9;
+        }
+        h1, h2, h3, .font-heading {
+            font-family: 'Heebo', 'Assistant', sans-serif;
+        }
+        .ltr-num, .ticker, .mono-ltr {
+            direction: ltr;
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .card-surface {
+            background-color: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+        }
+        html.dark .card-surface {
+            background-color: #111827;
+            border-color: #1F2937;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        }
+        .card-surface:hover {
+            border-color: #CBD5E1;
+        }
+        html.dark .card-surface:hover {
+            border-color: #374151;
+        }
+        .meta-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            line-height: 1;
+            padding: 3px 6px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .cite-btn {
+            font-family: 'JetBrains Mono', monospace;
+            direction: ltr;
+            transition: all 0.15s ease;
+        }
+        .cite-btn:hover {
+            transform: translateY(-0.5px);
+        }
+        .editorial-input {
+            background-color: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            transition: all 0.15s ease;
+        }
+        html.dark .editorial-input {
+            background-color: #0F172A;
+            border-color: #334155;
+            color: #F1F5F9;
+        }
+        .editorial-input:focus {
+            background-color: #FFFFFF;
+            border-color: #4F46E5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        html.dark .editorial-input:focus {
+            background-color: #111827;
+        }
+        .highlight-pulse {
+            animation: pulseBorder 2.2s ease-out;
+        }
+        @keyframes pulseBorder {
+            0% { box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.35); border-color: #4F46E5; }
+            100% { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); }
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+        html.dark ::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- ===================================================================== -->
+    <!-- TOP HEADER & GLOBAL CONTROLS                                          -->
+    <!-- ===================================================================== -->
+    <header class="sticky top-0 z-30 bg-[#FAFAFA]/90 dark:bg-[#0B0F19]/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- Brand + 4 Primary Screens -->
+            <div class="flex items-center gap-4 lg:gap-6">
+                <button onclick="switchScreen('briefing')" class="flex items-center gap-2.5 text-right group">
+                    <div class="w-7 h-7 rounded-lg bg-slate-900 dark:bg-indigo-600 text-white flex items-center justify-center font-mono font-bold text-xs shadow-xs">
+                        T
+                    </div>
+                    <div>
+                        <div class="font-heading font-extrabold text-base tracking-tight leading-none text-slate-900 dark:text-white">ThesisOS</div>
+                        <div class="hidden sm:block text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">Thesis & Counter-Analyst OS</div>
+                    </div>
+                </button>
+
+                <!-- 4 Core Screens Navigation -->
+                <nav class="flex items-center gap-1 bg-slate-100/90 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-x-auto max-w-full">
+                    <button onclick="switchScreen('briefing')" id="nav-briefing" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs transition-all whitespace-nowrap">
+                        1. תדריך בוקר
+                        <span class="mr-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">3</span>
+                    </button>
+                    <button onclick="switchScreen('portfolio')" id="nav-portfolio" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all whitespace-nowrap">
+                        2. תיק וחשיפות
+                    </button>
+                    <button onclick="switchScreen('workspace')" id="nav-workspace" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all whitespace-nowrap">
+                        3. מרחב עבודה לחברה
+                    </button>
+                    <button onclick="switchScreen('lab')" id="nav-lab" class="nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all whitespace-nowrap">
+                        4. מעבדת מחקר ותזה
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Global Controls: Phase Scope Filter + Freshness + Theme Toggle -->
+            <div class="flex items-center gap-2">
+                <!-- Build Phase Filter (Honest MVP Scope Toggle) -->
+                <div class="hidden md:flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5 text-[11px]">
+                    <button onclick="setPhaseFilter('all')" id="pf-all" class="px-2.5 py-1 rounded-md font-semibold bg-slate-900 text-white dark:bg-indigo-600 transition-colors">
+                        כל השלבים (Full)
+                    </button>
+                    <button onclick="setPhaseFilter('phase1')" id="pf-phase1" class="px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-colors">
+                        Phase 1 בלבד (MVP)
+                    </button>
+                </div>
+
+                <!-- Global Data Freshness Pill -->
+                <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 text-[11px] text-emerald-800 dark:text-emerald-300">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="font-mono">SEC & IBKR • 07:30</span>
+                </div>
+
+                <!-- Dark/Light Theme Toggle -->
+                <button onclick="toggleTheme()" title="החלף מצב תצוגה (בהיר / כהה)" class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                    <svg id="icon-moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    <svg id="icon-sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===================================================================== -->
+    <!-- MAIN WORKSPACE CONTAINER                                              -->
+    <!-- ===================================================================== -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+        <!-- ================================================================= -->
+        <!-- SCREEN 1: MORNING BRIEFING (תדריך בוקר — מה השתנה?)                -->
+        <!-- ================================================================= -->
+        <section id="screen-briefing" class="space-y-6">
+            
+            <!-- End-to-End User Journey Strip -->
+            <div class="card-surface rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-900/60">
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="font-bold text-slate-800 dark:text-slate-200">זרימת עבודה יומית:</span>
+                    <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-semibold">1. אירוע בוקר</span>
+                    <span class="text-slate-400">←</span>
+                    <span class="px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">2. אימות עובדה-פרשנות-השפעה</span>
+                    <span class="text-slate-400">←</span>
+                    <span class="px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">3. בדיקת KPI ו-Bear Case</span>
+                    <span class="text-slate-400">←</span>
+                    <span class="px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">4. תיעוד ביומן החלטות</span>
+                </div>
+                <span class="text-[11px] text-slate-500">ללא המלצות Buy/Sell • החלטה שלך בלבד</span>
+            </div>
+
+            <!-- Portfolio Pulse Strip -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <div class="card-surface rounded-2xl p-4">
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                        <span>שווי תיק מנוהל</span>
+                        <span class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">IBKR Flex • P1</span>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <span class="ltr-num text-xl font-bold text-slate-900 dark:text-white">$184,250</span>
+                        <span class="ltr-num text-xs font-semibold text-emerald-600">+0.84%</span>
+                    </div>
+                </div>
+
+                <div class="card-surface rounded-2xl p-4">
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                        <span>תזות פעילות במעקב</span>
+                        <span class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">Manual/DB • P1</span>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <span class="ltr-num text-xl font-bold text-slate-900 dark:text-white">5</span>
+                        <span class="text-xs text-slate-500">100% עם תנאי הפרכה</span>
+                    </div>
+                </div>
+
+                <div class="card-surface rounded-2xl p-4 border-r-4 border-r-amber-500">
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                        <span>דורש החלטה / בחינה</span>
+                        <span class="meta-tag bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300">SEC 10-Q • P1</span>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <span class="ltr-num text-xl font-bold text-amber-600">2</span>
+                        <span class="text-xs font-medium text-amber-700 dark:text-amber-400">NBIS, NVDA</span>
+                    </div>
+                </div>
+
+                <div class="card-surface rounded-2xl p-4">
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                        <span>ריכוזיות תזה מובילה</span>
+                        <span class="meta-tag bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Theme Tag • P2</span>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <span class="ltr-num text-xl font-bold text-indigo-600 dark:text-indigo-400">68%</span>
+                        <span class="text-xs text-slate-600 dark:text-slate-300 truncate max-w-[110px]">AI Datacenter</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Two-Column Grid: What Changed Feed (Left/Main) + What Did NOT Change & Exposure (Side) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- LEFT 8 COLS: Filtered What Changed Feed (Max 3 Material Items) -->
+                <div class="lg:col-span-8 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">מה השתנה מאתמול שמחייב תשומת לב?</h1>
+                            <p class="text-xs text-slate-500 mt-0.5">מסונן לפי Materiality לתנאי התזה שלך • לחץ על אירוע כדי לבחון את המקור במרחב העבודה</p>
+                        </div>
+                        <span class="meta-tag bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800">Fresh • 17.11.2026</span>
+                    </div>
+
+                    <!-- ITEM 1: NBIS (Critical KPI Breached -> Broken / Needs Decision) -->
+                    <article onclick="navigateToWorkspace('NBIS', 'ev-nbis-1')" class="card-surface rounded-2xl p-5 border-r-4 border-r-rose-600 cursor-pointer hover:shadow-md transition-all group">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800">
+                                    התזה הופרכה • דורש החלטה
+                                </span>
+                                <span class="ticker text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600">NBIS</span>
+                                <span class="text-xs text-slate-500">Nebius Group • משקל בתיק <span class="ltr-num font-semibold">11%</span></span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">SEC 6-K/10-Q</span>
+                                <span class="meta-tag bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Fresh</span>
+                                <span class="meta-tag bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Phase 1</span>
+                            </div>
+                        </div>
+
+                        <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-2">
+                            חריגה מ-KPI קריטי: קצב ההכנסות השנתי (Core ARR) ירד ל-<span class="ltr-num text-rose-600">$365M</span> (מתחת לסף ההפרכה: <span class="ltr-num">$400M</span>)
+                        </h2>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-50 dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 mb-3">
+                            <div>
+                                <span class="font-bold text-slate-700 dark:text-slate-300">הנחת תזה שנפגעה:</span>
+                                <p class="text-slate-600 dark:text-slate-400 mt-0.5">האצת פריסת אשכולות GPU מעל $400M ARR ברבעון הנוכחי.</p>
+                            </div>
+                            <div>
+                                <span class="font-bold text-rose-700 dark:text-rose-400">השפעה על התזה (AI Analysis):</span>
+                                <p class="text-slate-600 dark:text-slate-400 mt-0.5">עיכוב בחיבור חשמל באירופה דוחה הכרה בהכנסות ומפר את תנאי הסף הקריטי.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs pt-1">
+                            <span class="font-mono text-slate-500">מקור: Financial Release • Item 2 (MD&A)</span>
+                            <span class="font-bold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-[-3px] transition-transform">
+                                פתח במרחב העבודה לאימות ותיעוד החלטה ←
+                            </span>
+                        </div>
+                    </article>
+
+                    <!-- ITEM 2: NVDA (Qualitative Risk Alert -> Needs Review) -->
+                    <article onclick="navigateToWorkspace('NVDA', 'ev-nvda-1')" class="card-surface rounded-2xl p-5 border-r-4 border-r-amber-500 cursor-pointer hover:shadow-md transition-all group">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
+                                    דורש בחינה • שינוי ניסוח SEC
+                                </span>
+                                <span class="ticker text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600">NVDA</span>
+                                <span class="text-xs text-slate-500">NVIDIA Corp • משקל בתיק <span class="ltr-num font-semibold">34%</span></span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">SEC 10-Q</span>
+                                <span class="meta-tag bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Fresh</span>
+                                <span class="meta-tag bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 phase-extra">Phase 2</span>
+                            </div>
+                        </div>
+
+                        <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-2">
+                            הרחבת סעיף סיכון ריכוזיות: 4 לקוחות ענן מהווים <span class="ltr-num text-amber-600">49%</span> מההכנסות ומאיצים פיתוח שבבי ASIC עצמאיים
+                        </h2>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-50 dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 mb-3">
+                            <div>
+                                <span class="font-bold text-slate-700 dark:text-slate-300">הנחת תזה קשורה:</span>
+                                <p class="text-slate-600 dark:text-slate-400 mt-0.5">שמירה על נתח שוק דומיננטי ו-Gross Margin מעל 73%.</p>
+                            </div>
+                            <div>
+                                <span class="font-bold text-amber-700 dark:text-amber-400">השפעה על התזה (Bear Case Signal):</span>
+                                <p class="text-slate-600 dark:text-slate-400 mt-0.5">המדדים הכמותיים (3/3) תקינים, אך תרחיש הנגד מתחזק ומחייב בדיקה.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs pt-1">
+                            <span class="font-mono text-slate-500">מקור: SEC 10-Q • Item 1A (Risk Factors Redline)</span>
+                            <span class="font-bold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-[-3px] transition-transform">
+                                בחן ציטוט מקור והשווה מול Bear Case ←
+                            </span>
+                        </div>
+                    </article>
+
+                    <!-- ITEM 3: AVGO (Positive Confirmation -> Thesis Intact) -->
+                    <article onclick="navigateToWorkspace('AVGO', 'ev-avgo-1')" class="card-surface rounded-2xl p-5 border-r-4 border-r-emerald-600 cursor-pointer hover:shadow-md transition-all group">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
+                                    התזה שלמה • חיזוק ראיות
+                                </span>
+                                <span class="ticker text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600">AVGO</span>
+                                <span class="text-xs text-slate-500">Broadcom Inc. • משקל בתיק <span class="ltr-num font-semibold">23%</span></span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">SEC Form 4</span>
+                                <span class="meta-tag bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Fresh</span>
+                                <span class="meta-tag bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Phase 1</span>
+                            </div>
+                        </div>
+
+                        <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-2">
+                            רכישת בעלי עניין בשוק הפתוח (<span class="ticker text-xs">Code P</span>): דירקטור רכש מניות ב-<span class="ltr-num text-emerald-600">$1.85M</span>
+                        </h2>
+
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                            מחזק את תזת המעבר של ענקיות הענן לשבבי Custom ASICs של Broadcom. כל 3 מדדי ה-KPI עומדים ביעד ללא שינוי שלילי.
+                        </p>
+
+                        <div class="flex items-center justify-between text-xs pt-1">
+                            <span class="font-mono text-slate-500">מקור: SEC Form 4 • Open Market Purchase</span>
+                            <span class="font-bold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-[-3px] transition-transform">
+                                צפה בפרטי הדיווח במרחב העבודה ←
+                            </span>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- RIGHT 4 COLS: Reassurance ("מה לא השתנה") + Hidden Exposure Breakdown -->
+                <aside class="lg:col-span-4 space-y-5">
+                    
+                    <!-- "מה לא השתנה" (What Did NOT Change — Noise Reduction) -->
+                    <div class="card-surface rounded-2xl p-5 space-y-3">
+                        <div class="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-slate-800">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 dark:text-white">מה לא השתנה (אין רעש)</h3>
+                                <p class="text-[11px] text-slate-500">מניות בתיק ללא אירוע מהותי ב-24 שעות האחרונות</p>
+                            </div>
+                            <span class="meta-tag bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Phase 1</span>
+                        </div>
+
+                        <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <div onclick="navigateToWorkspace('CCJ')" class="py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 px-2 rounded-lg transition-colors">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span class="ticker font-bold text-sm">CCJ</span>
+                                        <span class="text-xs text-slate-500">Cameco (17%)</span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-500 mt-0.5">תנודת מחיר יומית בלבד (-1.4%) • אין דיווח SEC</div>
+                                </div>
+                                <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-400">3/3 KPIs ✓</span>
+                            </div>
+
+                            <div onclick="switchScreen('portfolio')" class="py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 px-2 rounded-lg transition-colors">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span class="ticker font-bold text-sm">TSM</span>
+                                        <span class="text-xs text-slate-500">TSMC (15%)</span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-500 mt-0.5">ללא שינוי בהנחות היסוד • 20-F מעודכן</div>
+                                </div>
+                                <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-400">3/3 KPIs ✓</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden Portfolio Exposure Card (3 Dimensions: Auto Sector + Manual Theme + Manual Dependency) -->
+                    <div class="card-surface rounded-2xl p-5 space-y-4">
+                        <div class="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-200 dark:border-slate-800">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 dark:text-white">חשיפה נסתרת בתיק</h3>
+                                <p class="text-[11px] text-slate-500">5 מניות שונות מתכנסות לתלות משותפת</p>
+                            </div>
+                            <span class="meta-tag bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 phase-extra">Manual Tags • P2</span>
+                        </div>
+
+                        <div class="space-y-3 text-xs">
+                            <!-- Dimension 1: Auto Sector -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-slate-600 dark:text-slate-400">סקטור (אוטומטי): <strong class="text-slate-900 dark:text-white">Semiconductors</strong></span>
+                                    <span class="ltr-num font-bold">72%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-slate-500 rounded-full" style="width: 72%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Dimension 2: Theme Tag -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-slate-600 dark:text-slate-400">תמה (תג ידני): <strong class="text-indigo-700 dark:text-indigo-400">AI Datacenter</strong></span>
+                                    <span class="ltr-num font-bold text-indigo-700 dark:text-indigo-400">68%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-indigo-600 rounded-full" style="width: 68%"></div>
+                                </div>
+                                <div class="text-[10px] font-mono text-slate-500 mt-1">NVDA (34%) + AVGO (23%) + NBIS (11%)</div>
+                            </div>
+
+                            <!-- Dimension 3: Dependency Tag -->
+                            <div class="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50">
+                                <div class="flex justify-between mb-1">
+                                    <span class="font-bold text-amber-900 dark:text-amber-300">תלות משותפת: Hyperscaler CapEx</span>
+                                    <span class="ltr-num font-bold text-amber-800 dark:text-amber-300">83%</span>
+                                </div>
+                                <p class="text-[11px] text-amber-800/90 dark:text-amber-200/80 leading-snug">
+                                    האטה בהוצאות ההון של Microsoft, Google ו-Meta תשפיע במקביל על 4 מתוך 5 הפוזיציות שלך.
+                                </p>
+                            </div>
+                        </div>
+
+                        <button onclick="switchScreen('portfolio')" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors">
+                            נהל משקלים ותגיות תזה בתיק ←
+                        </button>
+                    </div>
+
+                </aside>
+            </div>
+        </section>
+
+
+        <!-- ================================================================= -->
+        <!-- SCREEN 2: PORTFOLIO & EXPOSURE (תיק וחשיפות — איך אני עומד?)       -->
+        <!-- ================================================================= -->
+        <section id="screen-portfolio" class="hidden space-y-6">
+            
+            <!-- Header & View Mode Toggle -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">תיק ותזות חיות</h1>
+                        <span class="meta-tag bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">IBKR Flex + Manual • Phase 1</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-500">השוואה בין משקל בפועל לבין משקל היעד שהגדרת לעצמך, וסטטוס מדדי ההפרכה (קריטי מול תומך).</p>
+                </div>
+
+                <!-- Toggle: Portfolio View vs Thesis View -->
+                <div class="inline-flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <button onclick="setPortfolioSubView('thesis')" id="pview-thesis" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs">
+                        תצוגת תזות (Thesis View)
+                    </button>
+                    <button onclick="setPortfolioSubView('financial')" id="pview-financial" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                        תצוגה פיננסית (Portfolio View)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interactive Holdings Table -->
+            <div class="card-surface rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 uppercase">
+                                <th class="py-3.5 px-4">מניה ומקור</th>
+                                <th class="py-3.5 px-4">מחזור חיי תזה</th>
+                                <th class="py-3.5 px-4">תגית תזה (Theme)</th>
+                                <th class="py-3.5 px-4">משקל בפועל מול יעד שלך</th>
+                                <th class="py-3.5 px-4 pcol-thesis">עמידת KPIs (קריטי / תומך)</th>
+                                <th class="py-3.5 px-4 pcol-thesis">מגמת ראיות & דוח הבא</th>
+                                <th class="py-3.5 px-4 pcol-fin hidden">שווי שוק & P/L</th>
+                                <th class="py-3.5 px-4">פעולה</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-tbody" class="divide-y divide-slate-200/80 dark:divide-slate-800 text-sm">
+                            <!-- Rendered dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Dynamic Exposure Map (Recalculates when user edits Target Weights) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="card-surface rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">חשיפה לפי תמה (Theme Exposure)</h3>
+                        <span class="meta-tag bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 phase-extra">Phase 2</span>
+                    </div>
+                    <div id="exposure-themes-list" class="space-y-3 text-xs">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <div class="card-surface rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">חשיפה לפי תלות (Dependency)</h3>
+                        <span class="meta-tag bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 phase-extra">Manual Tag</span>
+                    </div>
+                    <div id="exposure-deps-list" class="space-y-3 text-xs">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <div class="card-surface rounded-2xl p-5 space-y-3 bg-slate-50/60 dark:bg-slate-900/40">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">סיכום איזון מול יעדים אישיים</h3>
+                        <span class="meta-tag bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-300">User Defined</span>
+                    </div>
+                    <div id="rebalance-summary" class="space-y-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ================================================================= -->
+        <!-- SCREEN 3: COMPANY WORKSPACE (מרחב עבודה לחברה — הליבה של המערכת)  -->
+        <!-- ================================================================= -->
+        <section id="screen-workspace" class="hidden space-y-6">
+            
+            <!-- Top Company Selector & Integrity / Audit Controls -->
+            <div class="card-surface rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs text-slate-500">בחר מרחב עבודה:</span>
+                        <div class="inline-flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                            <button onclick="openWorkspace('NBIS')" id="ws-pill-NBIS" class="ws-pill px-3 py-1 rounded-lg font-mono text-xs font-bold transition-all">NBIS</button>
+                            <button onclick="openWorkspace('NVDA')" id="ws-pill-NVDA" class="ws-pill px-3 py-1 rounded-lg font-mono text-xs font-bold transition-all">NVDA</button>
+                            <button onclick="openWorkspace('AVGO')" id="ws-pill-AVGO" class="ws-pill px-3 py-1 rounded-lg font-mono text-xs font-bold transition-all">AVGO</button>
+                            <button onclick="openWorkspace('CCJ')" id="ws-pill-CCJ" class="ws-pill px-3 py-1 rounded-lg font-mono text-xs font-bold transition-all">CCJ</button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <h1 id="ws-title" class="text-2xl font-bold text-slate-900 dark:text-white">Nebius Group (NBIS)</h1>
+                        <span id="ws-status-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold">Broken</span>
+                        <span id="ws-trend-badge" class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">Evidence: Weakening</span>
+                    </div>
+                </div>
+
+                <!-- Right: Process Discipline Score + Version Audit Trail -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Thesis Integrity / Process Discipline (NOT stock rating) -->
+                    <div class="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-right">
+                        <div class="text-[10px] text-slate-500">משמעת תהליך (Thesis Integrity)</div>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span id="ws-integrity" class="ltr-num text-sm font-bold text-indigo-600 dark:text-indigo-400">5/5</span>
+                            <span class="text-[11px] text-slate-600 dark:text-slate-300">כללי משמעת מוגדרים ✓</span>
+                        </div>
+                    </div>
+
+                    <!-- Audit Trail Button (Prevents silent moving of goalposts) -->
+                    <button onclick="openAuditModal()" class="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 transition-colors">
+                        <span>🔒 היסטוריית גרסאות (Audit Trail)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- MODULE 1: LOCKED THESIS SUMMARY -->
+            <div class="card-surface rounded-2xl p-6 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-md bg-slate-900 dark:bg-indigo-600 text-white font-mono text-xs flex items-center justify-center font-bold">1</span>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">התזה הנעולה (Locked Thesis v1.1)</h2>
+                        <span id="ws-thesis-type" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Mispricing</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">User Locked</span>
+                        <span id="ws-entry-meta" class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">Entry: $28.50 • Weight 11% / Target 10%</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 space-y-1">
+                        <div class="text-xs font-bold text-indigo-700 dark:text-indigo-400">Variant Perception ("למה השוק טועה")</div>
+                        <p id="ws-variant" class="text-sm text-slate-800 dark:text-slate-200 leading-relaxed"></p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-rose-50/40 dark:bg-rose-950/20 border border-rose-200/70 dark:border-rose-900/50 space-y-1">
+                        <div class="text-xs font-bold text-rose-800 dark:text-rose-400">תנאי הפרכה ראשי (Kill-Switch Rule)</div>
+                        <p id="ws-killswitch" class="text-sm text-slate-800 dark:text-slate-200 leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 2 & 3: QUANTITATIVE KPI MONITOR + SYMMETRIC BEAR CASE MONITOR -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- MODULE 2: Quantitative KPI Monitor (7 Cols) -->
+                <div class="lg:col-span-7 card-surface rounded-2xl p-6 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-md bg-slate-900 dark:bg-indigo-600 text-white font-mono text-xs flex items-center justify-center font-bold">2</span>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">מוניטור KPIs כמותי (קריטי מול תומך)</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">SEC XBRL / 10-Q</span>
+                            <span class="meta-tag bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Fresh</span>
+                            <span class="meta-tag bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Phase 1</span>
+                        </div>
+                    </div>
+
+                    <div id="ws-kpi-list" class="space-y-3">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- MODULE 3: Symmetric Bear Case Monitor / Counter-Analyst (5 Cols) -->
+                <div class="lg:col-span-5 card-surface rounded-2xl p-6 space-y-4 border-t-4 border-t-rose-500">
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-md bg-rose-600 text-white font-mono text-xs flex items-center justify-center font-bold">3</span>
+                            <div>
+                                <h2 class="text-base font-bold text-slate-900 dark:text-white">Bear Case Monitor</h2>
+                                <p class="text-[11px] text-slate-500">מעקב יזום נגד הטיית אישור (Counter-Analyst)</p>
+                            </div>
+                        </div>
+                        <span class="meta-tag bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 phase-extra">Phase 2</span>
+                    </div>
+
+                    <div id="ws-bear-list" class="space-y-3">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- MODULE 4: THREE-STAGE EVIDENCE & SEC REDLINE DELTA -->
+            <div class="card-surface rounded-2xl p-6 space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-md bg-slate-900 dark:bg-indigo-600 text-white font-mono text-xs flex items-center justify-center font-bold">4</span>
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">ציר ראיות ואימות תלת-שלבי (Evidence & SEC Redline)</h2>
+                            <p class="text-[11px] text-slate-500">הפרדה מוחלטת בין עובדת מקור ← פרשנות AI ← השפעה על התזה</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">SEC Filings</span>
+                        <span class="meta-tag bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Phase 1 / P2</span>
+                    </div>
+                </div>
+
+                <div id="ws-evidence-timeline" class="space-y-4">
+                    <!-- Rendered dynamically with 3 distinct visual layers -->
+                </div>
+            </div>
+
+            <!-- MODULE 5: INTERACTIVE DECISION LOG (יומן החלטות) -->
+            <div class="card-surface rounded-2xl p-6 space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-md bg-slate-900 dark:bg-indigo-600 text-white font-mono text-xs flex items-center justify-center font-bold">5</span>
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">יומן החלטות (Decision Log)</h2>
+                            <p class="text-[11px] text-slate-500">תיעוד כרונולוגי של החלטותיך מול המציאות — ללא שכתוב היסטוריה</p>
+                        </div>
+                    </div>
+                    <span class="meta-tag bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">User Audit • Phase 1</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Log New Decision Form (5 Cols) -->
+                    <div class="lg:col-span-5 bg-slate-50 dark:bg-slate-900/70 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+                        <div class="text-xs font-bold text-slate-900 dark:text-white">תעד החלטה חדשה עכשיו:</div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 mb-1">סוג החלטה</label>
+                            <select id="decision-type-select" class="editorial-input w-full rounded-lg px-3 py-2 text-xs font-semibold">
+                                <option value="בחינת תזה — ללא שינוי בפוזיציה">בחינת תזה — ללא שינוי בפוזיציה (Hold)</option>
+                                <option value="עדכון הנחות / מעקב צמוד">עדכון הנחות / מעקב צמוד (Needs Review)</option>
+                                <option value="הגדלת פוזיציה בעקבות אימות ראיות">הגדלת פוזיציה בעקבות אימות ראיות</option>
+                                <option value="הקטנת פוזיציה (ניהול סיכונים)">הקטנת פוזיציה (ניהול סיכונים)</option>
+                                <option value="סגירת פוזיציה — התזה הופרכה">סגירת פוזיציה — התזה הופרכה (Kill-Switch)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 mb-1">נימוק ההחלטה (יישמר עם חותמת זמן ומחיר נוכחי)</label>
+                            <textarea id="decision-rationale-input" rows="3" placeholder="לדוגמה: למרות החריגה ב-ARR הרבעוני, החלטתי להמתין לדוח הבא לפני סגירה..." class="editorial-input w-full rounded-lg p-2.5 text-xs leading-relaxed"></textarea>
+                        </div>
+                        <button onclick="appendDecisionLog()" class="w-full py-2.5 rounded-lg bg-slate-900 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs font-semibold transition-colors">
+                            שמור החלטה ביומן +
+                        </button>
+                    </div>
+
+                    <!-- Historical Decision Timeline (7 Cols) -->
+                    <div id="ws-decision-list" class="lg:col-span-7 space-y-3">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ================================================================= -->
+        <!-- SCREEN 4: RESEARCH & THESIS LAB (מעבדת מחקר ותזה — להכניס?)      -->
+        <!-- ================================================================= -->
+        <section id="screen-lab" class="hidden max-w-5xl mx-auto space-y-6">
+            
+            <!-- Lab Header & Ticker Selector (Includes Foreign 20-F Edge Case Demo) -->
+            <div class="card-surface rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">מעבדת מחקר ובניית תזה</h1>
+                        <span class="meta-tag bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Phase 1 & 3</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">ה-AI אוסף עובדות ומציע טיוטה — אתה בוחר סוג תזה, מגדיר KPIs קריטיים ומריץ בדיקה 4 רבעונים אחורה.</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-slate-500">בחר מניה לחקירה:</span>
+                    <div class="inline-flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <button onclick="loadLabTicker('MSFT')" id="lab-btn-MSFT" class="lab-tick-btn px-3 py-1 rounded-lg font-mono text-xs font-bold bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs">MSFT</button>
+                        <button onclick="loadLabTicker('CRWV')" id="lab-btn-CRWV" class="lab-tick-btn px-3 py-1 rounded-lg font-mono text-xs font-bold text-slate-600 dark:text-slate-400">CRWV</button>
+                        <button onclick="loadLabTicker('WIX')" id="lab-btn-WIX" class="lab-tick-btn px-3 py-1 rounded-lg font-mono text-xs font-bold text-slate-600 dark:text-slate-400">WIX (20-F)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Boundary Warning Banner (Shown for Foreign ADR / Non-10Q like WIX) -->
+            <div id="lab-coverage-banner" class="hidden card-surface rounded-2xl p-4 border-r-4 border-r-amber-500 bg-amber-50/60 dark:bg-amber-950/30 flex items-start gap-3">
+                <span class="text-lg">⚠️</span>
+                <div class="text-xs space-y-1">
+                    <div class="font-bold text-amber-900 dark:text-amber-300">מגבלת כיסוי דאטה (Foreign Private Issuer — SEC Form 20-F / 6-K)</div>
+                    <p class="text-amber-800 dark:text-amber-200/90 leading-relaxed">
+                        חברה זו רשומה מחוץ לארה"ב (ישראל) ולכן אינה מגישה דוחות 10-Q רבעוניים מלאים או טפסי Form 4 של בעלי עניין. תגיות XBRL אוטומטיות זמינות ברמה שנתית (20-F), ומדדים רבעוניים דורשים אימות מתוך הודעות 6-K.
+                    </p>
+                </div>
+            </div>
+
+            <!-- STEP A: COMPACT COLLAPSIBLE FACT CARDS (4 Hard KPI-style Cards) -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-slate-900 dark:text-white">שלב א׳: כרטיסי עובדות מהירים (לחץ להרחבת פירוט ומקור SEC)</h2>
+                    <span class="meta-tag bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300">AI Fact Extraction • Phase 3</span>
+                </div>
+                <div id="lab-fact-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+
+            <!-- STEP B: 7-POINT STRUCTURED THESIS BUILDER -->
+            <div class="card-surface rounded-2xl p-6 space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">שלב ב׳: עורך תזה מובנה (7 סעיפים + שומר סף)</h2>
+                        <p class="text-xs text-slate-500">בחר פילוסופיית השקעה, נסח את ליבת התזה והגדר מדדים מדידים</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="prefillLabAIDraft()" class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-semibold transition-colors">
+                            ✨ מלא טיוטת AI לעריכה
+                        </button>
+                        <button onclick="simulateWeakLabGate()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium transition-colors">
+                            הדגם חסימת "סקירה בלבד"
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Thesis Type Selector (Mispricing vs Quality Compounder) & Theme Tag -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">סוג התזה (מונע כפיית Mispricing על כל חברה)</label>
+                        <select id="lab-thesis-type" onchange="checkLabGate()" class="editorial-input w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold">
+                            <option value="mispricing">Mispricing — השוק טועה בתמחור / מפספס שינוי</option>
+                            <option value="compounder">Quality Compounder — חברה איכותית לצמיחה ארוכת טווח</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">תגית מנוע תזה (לחישוב חשיפה נסתרת בתיק)</label>
+                        <select id="lab-theme-tag" class="editorial-input w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold">
+                            <option value="AI Datacenter">AI Datacenter Buildout</option>
+                            <option value="Enterprise Cloud & AI">Enterprise Cloud & AI Software</option>
+                            <option value="Nuclear Power">Nuclear & Grid Power</option>
+                            <option value="SMB Commerce">SMB Digital Commerce</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Methodological Gate Status Banner -->
+                <div id="lab-gate-banner" class="p-4 rounded-xl border-r-4 border-r-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between gap-3">
+                    <div class="text-xs">
+                        <span id="lab-gate-status" class="font-bold text-emerald-800 dark:text-emerald-300">סטטוס: תזה תקפה לנעילה (v1.0)</span>
+                        <p id="lab-gate-msg" class="text-slate-600 dark:text-slate-400 mt-0.5">הנימוק המרכזי ותנאי ההפרכה מוגדרים בצורה חדה ומדידה.</p>
+                    </div>
+                    <span class="meta-tag bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300">Phase 1 Gate</span>
+                </div>
+
+                <!-- 7-Point Grid -->
+                <div class="space-y-4">
+                    <!-- 1. Variant Perception / Core Edge (Always First!) -->
+                    <div class="p-4 rounded-xl border-2 border-indigo-200 dark:border-indigo-900 bg-indigo-50/20 dark:bg-indigo-950/20 space-y-1.5">
+                        <label class="text-xs font-bold text-indigo-950 dark:text-indigo-300">1. ליבת התזה: למה השוק טועה (Variant Perception) / למה היתרון יישמר לאורך זמן *</label>
+                        <textarea id="lab-f1" oninput="checkLabGate()" rows="2" class="editorial-input w-full rounded-lg p-2.5 text-xs sm:text-sm leading-relaxed"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">2. מודל עסקי ואיך החברה מרוויחה</label>
+                            <textarea id="lab-f2" rows="2" class="editorial-input w-full rounded-lg p-2.5 text-xs leading-relaxed"></textarea>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">3. מנועי צמיחה מדידים (2–3 גורמים)</label>
+                            <textarea id="lab-f3" rows="2" class="editorial-input w-full rounded-lg p-2.5 text-xs leading-relaxed"></textarea>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">4. חפיר ויתרון תחרותי (Moat)</label>
+                            <textarea id="lab-f4" rows="2" class="editorial-input w-full rounded-lg p-2.5 text-xs leading-relaxed"></textarea>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-rose-800 dark:text-rose-400">5. סיכונים ותרחיש נגד (Bear Case)</label>
+                            <textarea id="lab-f5" rows="2" class="editorial-input w-full rounded-lg p-2.5 text-xs leading-relaxed"></textarea>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">6. תמחור ומה המחיר הנוכחי מניח</label>
+                            <textarea id="lab-f6" rows="2" class="editorial-input w-full rounded-lg p-2.5 text-xs leading-relaxed"></textarea>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">7. קטליזטורים ולוח זמנים</label>
+                            <textarea id="lab-f7" rows="2" class="editorial-input w-full rounded-lg p-2.5 text-xs leading-relaxed"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Builder (XBRL Library vs Custom vs Qualitative) + 4Q Historical Check -->
+                <div class="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">הגדרת מדדי KPIs ותנאי הפרכה (Kill-Switch)</h3>
+                            <p class="text-[11px] text-slate-500">בחר מדדים מספריית XBRL אוטומטית או מדד מותאם מטקסט, וסמן מה קריטי ומה תומך</p>
+                        </div>
+                        <button onclick="runFourQuarterCheck()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-semibold transition-colors">
+                            🔍 הרץ בדיקה לאחור על 4 רבעונים (4Q Historical Check)
+                        </button>
+                    </div>
+
+                    <div id="lab-kpis-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                        <!-- Rendered dynamically -->
+                    </div>
+
+                    <!-- 4-Quarter Historical Check Output Box -->
+                    <div id="lab-4q-result" class="hidden p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- Final Lock Action -->
+                <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                    <div class="text-xs text-slate-500">
+                        נעילת התזה תשמור גרסת <span class="font-mono font-bold text-slate-800 dark:text-slate-200">v1.0 Immutable</span> ותעביר את המניה למעקב חי.
+                    </div>
+                    <button onclick="lockNewThesis()" id="lab-lock-btn" class="px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold transition-colors shadow-xs">
+                        אשר ונעל תזה למעקב (Lock Thesis v1.0) 🔒
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: AUDIT TRAIL (VERSION HISTORY — NO MOVING GOALPOSTS)            -->
+    <!-- ===================================================================== -->
+    <div id="audit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/50 backdrop-blur-[1px] p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">היסטוריית גרסאות התזה (Audit Trail)</h3>
+                    <p class="text-xs text-slate-500">מנגנון למניעת הונאה עצמית: שינוי תנאי הצלחה בדיעבד מתועד אוטומטית</p>
+                </div>
+                <button onclick="closeAuditModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-sm">✕</button>
+            </div>
+            <div id="audit-modal-body" class="space-y-3 text-xs max-h-80 overflow-y-auto">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- TOAST NOTIFICATION                                                    -->
+    <!-- ===================================================================== -->
+    <div id="toast-banner" class="fixed bottom-5 left-5 z-50 hidden bg-slate-900 dark:bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2.5">
+        <span id="toast-icon">✓</span>
+        <span id="toast-text">הפעולה נשמרה בהצלחה</span>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- JAVASCRIPT APPLICATION STATE & RENDERING ENGINE                       -->
+    <!-- ===================================================================== -->
+    <script>
+        // 1. MASTER DATASET (CONSISTENT ACROSS ALL 4 SCREENS)
+        const COMPANIES = {
+            'NBIS': {
+                ticker: 'NBIS',
+                name: 'Nebius Group N.V.',
+                sector: 'Cloud Infrastructure',
+                themeTag: 'AI Datacenter',
+                dependencyTag: 'Hyperscaler CapEx',
+                lifecycle: 'Broken',
+                statusLabel: 'התזה הופרכה • דורש החלטה',
+                statusStyle: 'bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800',
+                trendLabel: 'Evidence: Weakening',
+                actualWeight: 11,
+                targetWeight: 10,
+                marketValue: '$20,267',
+                pnl: '+9.4%',
+                entryPrice: '$28.50',
+                nextEarnings: '18.02.2027',
+                sourceBadge: 'IBKR Flex',
+                freshness: 'Fresh (07:30)',
+                thesisType: 'Mispricing',
+                integrity: '5/5',
+                variantPerception: 'השוק מתמחר את NBIS בדיסקאונט של 45% מול CoreWeave בגלל היסטוריית הפיצול מ-Yandex, ומתעלם מקופת מזומנים נקייה של $2.2B ללא חוב שמאפשרת הקמת 300MW קיבולת AI.',
+                killSwitchRule: 'הפרכה מיידית אם קצב ההכנסות השנתי (Core AI ARR) יורד מתחת ל-$400M או אם ניצולת האשכולות יורדת מתחת ל-80%.',
+                kpis: [
+                    { name: 'Core AI ARR Run-Rate', tier: 'קריטי', source: 'SEC 6-K Text', fresh: 'Fresh • 17.11', target: '> $400M', actual: '$365M', ok: false, quarters: ['✓', '✓', '✓', '✕'] },
+                    { name: 'Net Cash Position', tier: 'קריטי', source: 'SEC XBRL', fresh: 'Fresh • 17.11', target: '> $1.5B', actual: '$2.15B', ok: true, quarters: ['✓', '✓', '✓', '✓'] },
+                    { name: 'GPU Cluster Utilization', tier: 'תומך', source: 'Earnings Call', fresh: 'Fresh • 17.11', target: '> 80%', actual: '78%', ok: false, quarters: ['✓', '✓', '✓', '✕'] }
+                ],
+                bearCases: [
+                    { title: 'עיכובי חיבור חשמל ושנאים באירופה', status: 'התממש חלקית ⚠', detail: 'דחיית חיבור 60MW בפינלנד פגעה בקצב ההכנסות הרבעוני והורידה את ה-ARR מתחת לרף ההפרכה.' },
+                    { title: 'שחיקת מחירי השכרת H200 בשוק הספוט', status: 'יציב ✓', detail: 'מחירי החוזים ארוכי הטווח נותרו יציבים סביב $2.35 לשעת GPU.' }
+                ],
+                evidence: [
+                    {
+                        id: 'ev-nbis-1',
+                        date: '17.11.2026 • הבוקר',
+                        doc: 'SEC Form 6-K • Q3 Financial Release',
+                        phase: 'Phase 1',
+                        fact: 'Core AI infrastructure annualized run-rate revenue (ARR) reached $365 million, reflecting a 6-week grid connection delay at our European data center expansion.',
+                        aiInterpretation: 'החברה אמנם צומחת ב-140% שנתי, אך קצב ההכנסות הנוכחי ($365M) נמוך ב-8.7% מסף המינימום ($400M) שהוגדר כתנאי להחזקת התזה.',
+                        impact: 'הפרת KPI קריטי — מעביר את סטטוס התזה ל-Broken ומחייב החלטת משקיע.',
+                        severity: 'critical',
+                        reviewed: false
+                    }
+                ],
+                decisions: [
+                    { date: '14.08.2026', action: 'כניסה לפוזיציה (Buy 10%)', price: '$28.50', note: 'נכנסתי לאחר אישור מאזן נקי מחוב עם $2.2B מזומן. הגדרתי $400M ARR כסף הפרכה קשיח.' }
+                ],
+                auditTrail: [
+                    { ver: 'v1.0 (Locked)', date: '14.08.2026', change: 'נעילת תזה ראשונית: Core ARR > $400M (קריטי), Net Cash > $1.5B (קריטי), Utilization > 80% (תומך).' }
+                ]
+            },
+            'NVDA': {
+                ticker: 'NVDA',
+                name: 'NVIDIA Corporation',
+                sector: 'Semiconductors',
+                themeTag: 'AI Datacenter',
+                dependencyTag: 'Hyperscaler CapEx',
+                lifecycle: 'Active',
+                statusLabel: 'דורש בחינה • 3/3 KPIs תקינים',
+                statusStyle: 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800',
+                trendLabel: 'Evidence: Mixed',
+                actualWeight: 34,
+                targetWeight: 30,
+                marketValue: '$62,645',
+                pnl: '+64.2%',
+                entryPrice: '$87.00',
+                nextEarnings: '25.02.2027',
+                sourceBadge: 'IBKR Flex',
+                freshness: 'Fresh (07:30)',
+                thesisType: 'Quality Compounder',
+                integrity: '5/5',
+                variantPerception: 'השוק מתמקד במחזורי חומרה קצרי טווח, ומפספס שנעילת התוכנה של CUDA ו-NVLink הופכת את NVDA לתשתית הסטנדרטית של מחשוב AI ארגוני עם כוח תמחור מתמשך.',
+                killSwitchRule: 'הפרכה אם שולי הרווח הגולמי יורדים מתחת ל-72% למשך שני רבעונים רצופים או אם צמיחת Data Center יורדת מתחת ל-45%.',
+                kpis: [
+                    { name: 'Data Center Revenue YoY', tier: 'קריטי', source: 'SEC XBRL', fresh: 'Fresh • 17.11', target: '> 45.0%', actual: '112.0%', ok: true, quarters: ['✓', '✓', '✓', '✓'] },
+                    { name: 'GAAP Gross Margin', tier: 'קריטי', source: 'SEC XBRL', fresh: 'Fresh • 17.11', target: '> 72.0%', actual: '75.1%', ok: true, quarters: ['✓', '✓', '✓', '✓'] },
+                    { name: 'HBM3E Supply Visibility', tier: 'תומך', source: 'Supplier Transcript', fresh: 'Fresh • 17.11', target: 'נעול 12 חודשים', actual: 'נעול עד 2027', ok: true, quarters: ['✓', '✓', '✓', '✓'] }
+                ],
+                bearCases: [
+                    { title: 'מעבר לקוחות הענן לשבבי Custom ASIC', status: 'התראה פעילה ⚠', detail: 'ב-10-Q האחרון עלה שיעור ההכנסות מ-4 לקוחות ל-49%, לצד אזכור מפורש של פיתוח שבבים פנימיים אצל הלקוחות.' },
+                    { title: 'האטת הוצאות ההון (CapEx) של Hyperscalers', status: 'תקין ✓', detail: 'תחזיות CapEx ל-2027 של Microsoft ו-Meta עלו ב-14% בממוצע.' }
+                ],
+                evidence: [
+                    {
+                        id: 'ev-nvda-1',
+                        date: '17.11.2026 • הבוקר',
+                        doc: 'SEC Form 10-Q • Item 1A (Risk Factors Redline)',
+                        phase: 'Phase 2',
+                        fact: 'Four direct cloud service provider customers accounted for 49% of total revenue (up from 46% in the prior quarter), and these customers continue to invest in internal custom ASIC architectures.',
+                        aiInterpretation: 'שינוי ניסוח מהותי בסעיף הסיכונים: עלייה בריכוזיות ההכנסות ל-49% אצל 4 לקוחות והכרה מפורשת בתחרות מצד שבבים פנימיים של הלקוחות.',
+                        impact: 'אינו מפר KPI כמותי, אך מחזק את תרחיש ה-Bear Case ומחייב החלטה האם לצמצם משקל עודף (34% מול יעד 30%).',
+                        severity: 'warning',
+                        reviewed: false
+                    },
+                    {
+                        id: 'ev-nvda-2',
+                        date: '16.11.2026',
+                        doc: 'Micron (MU) Q4 Earnings Call • Read-Through',
+                        phase: 'Phase 2',
+                        fact: 'Our HBM3E memory capacity is completely sold out through calendar year 2027 with multi-year pricing agreements locked in.',
+                        aiInterpretation: 'מאשר ששרשרת האספקה של מאיצי Blackwell נעולה מראש לשנתיים הקרובות ללא ירידה בביקוש.',
+                        impact: 'תומך בהנחת צמיחת ה-Data Center ב-2027.',
+                        severity: 'positive',
+                        reviewed: true
+                    }
+                ],
+                decisions: [
+                    { date: '02.09.2026', action: 'הקטנת פוזיציה חלקית (Trim 4%)', price: '$138.20', note: 'הפוזיציה עלתה ל-38% מהתיק. מימשתי חלק קטן כדי להתקרב למשקל היעד של 30%.' },
+                    { date: '15.01.2026', action: 'כניסה לפוזיציה (Buy 25%)', price: '$87.00', note: 'רכישה על בסיס יתרון תוכנת CUDA והשקת ארכיטקטורת Blackwell.' }
+                ],
+                auditTrail: [
+                    { ver: 'v1.1', date: '02.09.2026', change: 'עדכון משקל יעד אישי מ-25% ל-30% בעקבות עליית רווחיות Blackwell. תנאי ה-KPI נותרו ללא שינוי.' },
+                    { ver: 'v1.0 (Locked)', date: '15.01.2026', change: 'נעילת תזה: Data Center YoY > 45% (קריטי), Gross Margin > 72% (קריטי).' }
+                ]
+            },
+            'AVGO': {
+                ticker: 'AVGO',
+                name: 'Broadcom Inc.',
+                sector: 'Semiconductors',
+                themeTag: 'AI Datacenter',
+                dependencyTag: 'Hyperscaler CapEx',
+                lifecycle: 'Active',
+                statusLabel: 'התזה שלמה • 3/3 KPIs תקינים',
+                statusStyle: 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
+                trendLabel: 'Evidence: Supportive',
+                actualWeight: 23,
+                targetWeight: 25,
+                marketValue: '$42,377',
+                pnl: '+28.5%',
+                entryPrice: '$137.20',
+                nextEarnings: '12.12.2026',
+                sourceBadge: 'IBKR Flex',
+                freshness: 'Fresh (07:30)',
+                thesisType: 'Mispricing',
+                integrity: '5/5',
+                variantPerception: 'השוק מתמחר את AVGO כחברת שבבים בוגרת, ומפספס שמעבר ענקיות הענן לשבבי Custom AI ASICs (אשכולות מיליון שבבים) יכפיל את הכנסות ה-AI ל-$24B לצד תזרים חוזר מ-VMware.',
+                killSwitchRule: 'הפרכה אם צמיחת הכנסות ה-AI יורדת מתחת ל-35% שנתי או אם יחס חוב נטו ל-EBITDA עולה מעל 2.3x.',
+                kpis: [
+                    { name: 'AI Semiconductor YoY', tier: 'קריטי', source: 'SEC 10-Q Text', fresh: 'Fresh • 17.11', target: '> 35.0%', actual: '48.2%', ok: true, quarters: ['✓', '✓', '✓', '✓'] },
+                    { name: 'Consolidated Gross Margin', tier: 'קריטי', source: 'SEC XBRL', fresh: 'Fresh • 17.11', target: '> 74.0%', actual: '76.4%', ok: true, quarters: ['✓', '✓', '✓', '✓'] },
+                    { name: 'Net Debt / EBITDA', tier: 'תומך', source: 'SEC XBRL', fresh: 'Fresh • 17.11', target: '< 2.3x', actual: '1.85x', ok: true, quarters: ['✓', '✓', '✓', '✓'] }
+                ],
+                bearCases: [
+                    { title: 'נטישת לקוחות VMware בעקבות העלאות מחירים', status: 'תקין ✓', detail: 'שיעור חידוש המנויים נותר מעל 91% למרות התארכות קלה במועדי החתימה באירופה.' }
+                ],
+                evidence: [
+                    {
+                        id: 'ev-avgo-1',
+                        date: '17.11.2026 • הבוקר',
+                        doc: 'SEC Form 4 • Open Market Purchase (Code P)',
+                        phase: 'Phase 1',
+                        fact: 'Director Harry You purchased 10,500 shares of common stock in the open market at $176.10 ($1.85M total transaction value).',
+                        aiInterpretation: 'רכישה יזומה מכסף אישי בשוק הפתוח לקראת פרסום דוחות Q4 בדצמבר.',
+                        impact: 'מחזק את ביטחון ההנהלה בתחזית הכנסות ה-AI.',
+                        severity: 'positive',
+                        reviewed: true
+                    }
+                ],
+                decisions: [
+                    { date: '10.06.2026', action: 'כניסה לפוזיציה (Buy 25%)', price: '$137.20', note: 'כניסה על בסיס שילוב מנועי צמיחה של Custom ASICs ותזרים תוכנה מ-VMware.' }
+                ],
+                auditTrail: [
+                    { ver: 'v1.0 (Locked)', date: '10.06.2026', change: 'נעילת תזה ראשונית: AI Revenue YoY > 35% (קריטי), Gross Margin > 74% (קריטי).' }
+                ]
+            },
+            'CCJ': {
+                ticker: 'CCJ',
+                name: 'Cameco Corporation',
+                sector: 'Energy & Uranium',
+                themeTag: 'Nuclear Power',
+                dependencyTag: 'Utility Contracting',
+                lifecycle: 'Active',
+                statusLabel: 'התזה שלמה • ללא שינוי',
+                statusStyle: 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
+                trendLabel: 'Evidence: Supportive',
+                actualWeight: 17,
+                targetWeight: 20,
+                marketValue: '$31,322',
+                pnl: '+19.8%',
+                entryPrice: '$49.15',
+                nextEarnings: '11.02.2027',
+                sourceBadge: 'IBKR Flex',
+                freshness: 'Fresh (07:30)',
+                thesisType: 'Mispricing',
+                integrity: '5/5',
+                variantPerception: 'השוק מתייחס ל-CCJ כמניית סחורה מחזורית, ומחמיץ שמבנה החוזים ארוכי הטווח קובע מחירי רצפה של $70+ לפאונד ומבטיח הכפלת תזרים המזומנים החופשי עד 2028.',
+                killSwitchRule: 'הפרכה אם מחיר המימוש הממוצע בחוזים יורד מתחת ל-$70 לפאונד או אם צבר ההזמנות יורד מתחת ל-200M פאונד.',
+                kpis: [
+                    { name: 'Average Realized Price', tier: 'קריטי', source: 'SEC 40-F/6-K', fresh: 'Fresh • 17.11', target: '> $70/lb', actual: '$78.5/lb', ok: true, quarters: ['✓', '✓', '✓', '✓'] },
+                    { name: 'Long-Term Contract Book', tier: 'קריטי', source: 'Company Release', fresh: 'Fresh • 17.11', target: '> 200M lbs', actual: '215M lbs', ok: true, quarters: ['✓', '✓', '✓', '✓'] },
+                    { name: 'Westinghouse EBITDA YoY', tier: 'תומך', source: 'Segment Note', fresh: 'Fresh • 17.11', target: '> 15%', actual: '+22%', ok: true, quarters: ['✓', '✓', '✓', '✓'] }
+                ],
+                bearCases: [
+                    { title: 'תקלות הפקה במכרה McArthur River', status: 'תקין ✓', detail: 'קצב ההפקה הרבעוני עומד ביעד השנתי של 18M פאונד.' }
+                ],
+                evidence: [
+                    {
+                        id: 'ev-ccj-1',
+                        date: '12.11.2026',
+                        doc: 'SEC Schedule 13G • Institutional Ownership',
+                        phase: 'Phase 1',
+                        fact: 'Coatue Management reported a 5.54% beneficial ownership stake in Cameco Corporation.',
+                        aiInterpretation: 'כניסה משמעותית של קרן גידור טכנולוגית מתוך תזת אספקת חשמל גרעיני למרכזי נתונים.',
+                        impact: 'תומך בקטליזטור חתימת חוזי אספקה ישירים מול ענקיות ענן.',
+                        severity: 'positive',
+                        reviewed: true
+                    }
+                ],
+                decisions: [
+                    { date: '22.04.2026', action: 'כניסה לפוזיציה (Buy 20%)', price: '$49.15', note: 'רכישה כגידור אנרגטי לתזת ה-AI Datacenter עם הגנת מחירי רצפה בחוזים.' }
+                ],
+                auditTrail: [
+                    { ver: 'v1.0 (Locked)', date: '22.04.2026', change: 'נעילת תזה: Realized Price > $70/lb (קריטי), Contract Book > 200M lbs (קריטי).' }
+                ]
+            },
+            'TSM': {
+                ticker: 'TSM',
+                name: 'Taiwan Semiconductor',
+                sector: 'Semiconductors',
+                themeTag: 'AI Datacenter',
+                dependencyTag: 'Hyperscaler CapEx',
+                lifecycle: 'Active',
+                statusLabel: 'התזה שלמה • ללא שינוי',
+                statusStyle: 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
+                trendLabel: 'Evidence: Supportive',
+                actualWeight: 15,
+                targetWeight: 15,
+                marketValue: '$27,639',
+                pnl: '+31.0%',
+                entryPrice: '$154.00',
+                nextEarnings: '16.01.2027',
+                sourceBadge: 'IBKR Flex',
+                freshness: 'Stale (20-F • 18d)',
+                thesisType: 'Quality Compounder',
+                integrity: '5/5',
+                variantPerception: 'מונופול ייצור השבבים המתקדמים (3nm/2nm) הנהנה מכל תרחיש תחרותי בין NVIDIA ל-Custom ASICs.',
+                killSwitchRule: 'הפרכה אם שולי הרווח הגולמי יורדים מתחת ל-53% או אם חלה פגיעה בלוחות הזמנים של 2nm.',
+                kpis: [
+                    { name: 'Gross Margin', tier: 'קריטי', source: 'SEC 20-F/6-K', fresh: 'Stale (18d)', target: '> 53.0%', actual: '57.8%', ok: true, quarters: ['✓', '✓', '✓', '✓'] },
+                    { name: 'Advanced Nodes (<7nm) Share', tier: 'קריטי', source: 'Monthly Sales', fresh: 'Fresh', target: '> 65%', actual: '69%', ok: true, quarters: ['✓', '✓', '✓', '✓'] },
+                    { name: '2nm N2 Ramp Schedule', tier: 'תומך', source: 'Earnings Call', fresh: 'Stale (18d)', target: 'H2 2026', actual: 'On Track', ok: true, quarters: ['✓', '✓', '✓', '✓'] }
+                ],
+                bearCases: [],
+                evidence: [],
+                decisions: [],
+                auditTrail: []
+            }
+        };
+
+        // LAB TEMPLATES (SCREEN 4 — INCLUDING FOREIGN 20-F EDGE CASE 'WIX')
+        const LAB_TEMPLATES = {
+            'MSFT': {
+                ticker: 'MSFT',
+                name: 'Microsoft Corporation',
+                isForeign20F: false,
+                factCards: [
+                    { label: 'MOAT', value: '9.4/10', sub1: 'Enterprise OS + Azure Lock-in', sub2: 'SEC 10-K • Item 1', detail: 'שילוב של מערכת ההפעלה הארגונית, Office 365 ותשתית הענן Azure מייצר עלויות מעבר גבוהות במיוחד.' },
+                    { label: 'GROWTH', value: '+33% YoY', sub1: 'Azure & Cloud Services', sub2: 'SEC 10-Q • XBRL', detail: 'צמיחת Azure מונעת מביקוש לשירותי AI (תרומה של 12 נקודות אחוז לצמיחת הענן).' },
+                    { label: 'RISKS', value: '$80B CapEx', sub1: 'שחיקה זמנית ב-FCF Margin', sub2: '10-Q • Risk Factors', detail: 'השקעות הון מסיביות בשרתי AI לוחצות על שולי הרווח הגולמי של הענן בטווח הקצר.' },
+                    { label: 'VALUATION', value: '31.4x P/E', sub1: 'מול ממוצע 5 שנים: 30.8x', sub2: 'Market Data • Fresh', detail: 'נסחרת קרוב למכפיל ההיסטורי הממוצע שלה למרות האצת צמיחת הענן.' }
+                ],
+                draft: {
+                    type: 'compounder',
+                    theme: 'Enterprise Cloud & AI',
+                    f1: 'השוק חושש שהשקעות ההון של $80B ישחקו את התשואה על ההון (ROIC), ומפספס ש-Azure הופך לשכבת התשתית המועדפת להטמעת AI ארגוני עם תזרים חוזר ארוך טווח.',
+                    f2: 'הכנסות ממנויי תוכנה ארגונית (Productivity & Business Processes) ותשתית ענן (Intelligent Cloud) עם שולי תפעול מעל 44%.',
+                    f3: '1. צמיחת Azure מעל 30% שנתי.\n2. הרחבת אימוץ Copilot בארגוני Fortune 500.\n3. שמירה על שולי רווח תפעולי מעל 43%.',
+                    f4: 'הפצה מובנית לכל ארגון בעולם דרך Active Directory ו-Microsoft 365.',
+                    f5: 'האטה בהחזר ההשקעה (ROI) של לקוחות על כלי AI ועיכוב בהמרת ניסיונות לחוזים שנתיים.',
+                    f6: 'מכפיל 31.4x Fwd P/E מניח צמיחת רווח של 14% בשנה; האצה ל-18% תייצר אפסייד משמעותי.',
+                    f7: 'דוחות Q2/Q3 2027: התייצבות קצב ה-CapEx ביחס להכנסות הענן.',
+                    kpis: [
+                        { name: 'Azure Revenue Growth', source: 'SEC 10-Q Text', tier: 'קריטי', cond: '> 28%', q4: ['✓ 31%', '✓ 33%', '✓ 34%', '✓ 33%'] },
+                        { name: 'Operating Margin', source: 'SEC XBRL (Auto)', tier: 'קריטי', cond: '> 42%', q4: ['✓ 44.6%', '✓ 43.1%', '✓ 46.6%', '✓ 44.2%'] },
+                        { name: 'CapEx / Revenue', source: 'SEC XBRL (Auto)', tier: 'תומך', cond: '< 26%', q4: ['✓ 21%', '✓ 23%', '✓ 24%', '✓ 25%'] }
+                    ]
+                }
+            },
+            'CRWV': {
+                ticker: 'CRWV',
+                name: 'CoreWeave Inc.',
+                isForeign20F: false,
+                factCards: [
+                    { label: 'MOAT', value: '7.2/10', sub1: 'תשתית Bare-Metal ייעודית ל-AI', sub2: 'SEC S-1/10-Q', detail: 'אשכולות GPU ייעודיים שנבנו מאפס עבור אימון מודלים גדולים עם ביצועים עדיפים על ענן גנרי.' },
+                    { label: 'GROWTH', value: '+190% YoY', sub1: 'צבר חוזים מחייב (RPO)', sub2: '10-Q • MD&A', detail: 'צבר חוזים רב-שנתיים של מעל $15B מול מעבדות AI וענקיות טכנולוגיה.' },
+                    { label: 'RISKS', value: 'ריכוזיות & חוב', sub1: '62% מההכנסות מלקוח אחד (MSFT)', sub2: '10-Q • Risk Factors', detail: 'תלות קיצונית במיקרוסופט ומינוף פיננסי גבוה למימון רכישת שבבים.' },
+                    { label: 'VALUATION', value: '11.2x EV/ARR', sub1: 'פרמיה של 45% מול NBIS', sub2: 'Market Data', detail: 'מתמחרת צמיחה אגרסיבית ללא מרווח ביטחון לעיכובים.' }
+                ],
+                draft: {
+                    type: 'mispricing',
+                    theme: 'AI Datacenter',
+                    f1: 'השוק חושש מריכוזיות הלקוחות ומהחוב, ומחמיץ שכל חוזה חוב מגובה בחוזה הכנסות Take-or-Pay חתום מול לקוחות בדירוג אשראי AAA.',
+                    f2: 'השכרת כוח מחשוב AI ייעודי בחוזים רב-שנתיים קשיחים.',
+                    f3: '1. הקמת 500MW של קיבולת חדשה ב-2027.\n2. גיוון בסיס הלקוחות כך שאף לקוח לא יהווה מעל 45%.',
+                    f4: 'קדימות באספקת שבבי NVIDIA החדשים והנדסת קירור מתקדמת.',
+                    f5: 'תלות במיקרוסופט (62%) וסיכון מחזור חוב אם ריביות המימון יעלו.',
+                    f6: 'מכפיל 11.2x EV/ARR מגלם עמידה מלאה בלוחות הזמנים של בניית הדאטה סנטרים.',
+                    f7: 'פתיחת חוות השרתים בטקסס ברבעון Q1 2027.',
+                    kpis: [
+                        { name: 'Remaining Perf. Obligations', source: '10-Q Text', tier: 'קריטי', cond: '> $14B', q4: ['✓ $11B', '✓ $13B', '✓ $15B', '✓ $15.4B'] },
+                        { name: 'Top Customer Concentration', source: '10-Q Note', tier: 'קריטי', cond: '< 65%', q4: ['✕ 68%', '✕ 66%', '✓ 63%', '✓ 62%'] },
+                        { name: 'Adjusted EBITDA Margin', source: 'SEC XBRL (Auto)', tier: 'תומך', cond: '> 55%', q4: ['✓ 56%', '✓ 58%', '✓ 60%', '✓ 61%'] }
+                    ]
+                }
+            },
+            'WIX': {
+                ticker: 'WIX',
+                name: 'Wix.com Ltd. (Israel • Foreign ADR)',
+                isForeign20F: true,
+                factCards: [
+                    { label: 'MOAT', value: '8.1/10', sub1: 'אקוסיסטם אתרים ותשלומים ל-SMB', sub2: 'SEC 20-F • Annual', detail: 'בסיס של מיליוני עסקים קטנים וסוכנויות (Wix Studio) עם הכנסות חוזרות גבוהות.' },
+                    { label: 'GROWTH', value: '+14% YoY', sub1: 'צמיחת Partners & Studio', sub2: 'Form 6-K Release', detail: 'התרחבות בקרב סוכנויות דיגיטל מעלה את ה-ARPU הממוצע.' },
+                    { label: 'COVERAGE', value: '20-F / 6-K', sub1: 'ללא 10-Q רבעוני וללא Form 4', sub2: 'Data Boundary', detail: 'כחברה ישראלית, דיווחי SEC רבעוניים מוגשים בפורמט 6-K מקוצר בלבד.' },
+                    { label: 'VALUATION', value: '22.5x FCF', sub1: 'תזרים חופשי מואץ (26% שוליים)', sub2: 'Market Data', detail: 'שיפור משמעותי ברווחיות לאחר תוכנית התייעלות.' }
+                ],
+                draft: {
+                    type: 'mispricing',
+                    theme: 'SMB Commerce',
+                    f1: 'השוק רואה ב-Wix כלי בניית אתרים בסיסי שחשוף ל-AI, ומפספס שהמעבר לסוכנויות (Wix Studio) ופתרונות תשלומים הופך אותה לפלטפורמת ניהול עסק מלאה עם FCF Margin של 26%.',
+                    f2: 'מנויים חוזרים לבניית אתרים (Creative Subscriptions) ועמלות סליקה ומסחר (Business Solutions).',
+                    f3: '1. צמיחת הכנסות Partners מעל 25%.\n2. הרחבת שולי תזרים המזומנים החופשי מעל 27%.',
+                    f4: 'ממשק ניהול אחוד לעסקים קטנים עם עקומת למידה נמוכה.',
+                    f5: 'ירידה בהקמת עסקים קטנים חדשים בסביבת האטה כלכלית.',
+                    f6: 'מכפיל 22.5x FCF אינו משקף את האצת הרווחיות התפעולית.',
+                    f7: 'דוח שנתי 20-F במרץ 2027.',
+                    kpis: [
+                        { name: 'Free Cash Flow Margin', source: '6-K / Manual', tier: 'קריטי', cond: '> 24%', q4: ['✓ 22%', '✓ 24%', '✓ 25%', '✓ 26%'] },
+                        { name: 'Partners Revenue YoY', source: '6-K Text', tier: 'קריטי', cond: '> 20%', q4: ['✓ 28%', '✓ 26%', '✓ 25%', '✓ 24%'] },
+                        { name: 'Net Dollar Retention', source: '20-F Annual', tier: 'תומך', cond: '> 103%', q4: ['✓ 104%', '✓ 104%', '✓ 105%', '✓ 105%'] }
+                    ]
+                }
+            }
+        };
+
+        // GLOBAL STATE
+        let currentScreen = 'briefing';
+        let activeWorkspaceTicker = 'NBIS';
+        let activeLabTicker = 'MSFT';
+        let portfolioSubView = 'thesis';
+        let phaseFilter = 'all';
+
+        // NAVIGATION
+        function switchScreen(screen) {
+            currentScreen = screen;
+            ['briefing', 'portfolio', 'workspace', 'lab'].forEach(s => {
+                document.getElementById('screen-' + s).classList.add('hidden');
+                const btn = document.getElementById('nav-' + s);
+                btn.className = s === screen
+                    ? 'nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs transition-all whitespace-nowrap'
+                    : 'nav-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all whitespace-nowrap';
+            });
+            document.getElementById('screen-' + screen).classList.remove('hidden');
+
+            if (screen === 'portfolio') renderPortfolioScreen();
+            if (screen === 'workspace') renderWorkspace(activeWorkspaceTicker);
+            if (screen === 'lab') loadLabTicker(activeLabTicker);
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // END-TO-END USER JOURNEY NAVIGATION (BRIEFING -> WORKSPACE -> EVIDENCE HIGHLIGHT)
+        function navigateToWorkspace(ticker, evidenceId = null) {
+            activeWorkspaceTicker = ticker;
+            switchScreen('workspace');
+            if (evidenceId) {
+                setTimeout(() => {
+                    const el = document.getElementById(evidenceId);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('highlight-pulse');
+                    }
+                }, 120);
+            }
+        }
+
+        // GLOBAL PHASE FILTER (MVP HONESTY)
+        function setPhaseFilter(mode) {
+            phaseFilter = mode;
+            document.getElementById('pf-all').className = mode === 'all'
+                ? 'px-2.5 py-1 rounded-md font-semibold bg-slate-900 text-white dark:bg-indigo-600 transition-colors'
+                : 'px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-colors';
+            document.getElementById('pf-phase1').className = mode === 'phase1'
+                ? 'px-2.5 py-1 rounded-md font-semibold bg-slate-900 text-white dark:bg-indigo-600 transition-colors'
+                : 'px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-colors';
+
+            document.querySelectorAll('.phase-extra').forEach(el => {
+                if (mode === 'phase1') {
+                    el.closest('.card-surface, article, div.p-3')?.classList.add('opacity-40');
+                } else {
+                    el.closest('.card-surface, article, div.p-3')?.classList.remove('opacity-40');
+                }
+            });
+
+            showToast(mode === 'phase1' ? 'מציג דגש על רכיבי הליבה של Phase 1 (MVP)' : 'מציג את כל שכבות המערכת (Phase 1–3)');
+        }
+
+        // DARK / LIGHT THEME TOGGLE
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            document.getElementById('icon-moon').classList.toggle('hidden', isDark);
+            document.getElementById('icon-sun').classList.toggle('hidden', !isDark);
+        }
+
+        // SCREEN 2: PORTFOLIO & EXPOSURE RENDERING
+        function setPortfolioSubView(view) {
+            portfolioSubView = view;
+            document.getElementById('pview-thesis').className = view === 'thesis'
+                ? 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs'
+                : 'px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900';
+            document.getElementById('pview-financial').className = view === 'financial'
+                ? 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs'
+                : 'px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900';
+
+            document.querySelectorAll('.pcol-thesis').forEach(el => el.classList.toggle('hidden', view !== 'thesis'));
+            document.querySelectorAll('.pcol-fin').forEach(el => el.classList.toggle('hidden', view !== 'financial'));
+        }
+
+        function renderPortfolioScreen() {
+            const tbody = document.getElementById('portfolio-tbody');
+            const list = Object.values(COMPANIES);
+
+            tbody.innerHTML = list.map(c => {
+                const okCount = c.kpis.filter(k => k.ok).length;
+                const totalKpis = c.kpis.length;
+                const critFailed = c.kpis.some(k => !k.ok && k.tier === 'קריטי');
+                const diff = c.actualWeight - c.targetWeight;
+
+                const lifecycleBadge = c.lifecycle === 'Broken'
+                    ? 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800'
+                    : (c.statusLabel.includes('בחינה')
+                        ? 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800');
+
+                return `
+                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-colors">
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-2">
+                                <span class="ticker font-bold text-slate-900 dark:text-white">${c.ticker}</span>
+                                <span class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">${c.sourceBadge}</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">${c.name} • <span class="font-mono">${c.freshness}</span></div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border ${lifecycleBadge}">
+                                ${c.lifecycle}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2 py-1 rounded-md text-xs font-medium bg-indigo-50/80 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300">
+                                ${c.themeTag}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-2">
+                                <span class="ltr-num font-bold text-slate-900 dark:text-white">${c.actualWeight}%</span>
+                                <span class="text-xs text-slate-400">/ יעד:</span>
+                                <input type="number" min="0" max="100" value="${c.targetWeight}" onchange="updateTargetWeight('${c.ticker}', this.value)" class="editorial-input w-14 px-2 py-0.5 rounded font-mono text-xs font-bold text-center">
+                                <span class="text-[11px] font-mono ${diff > 0 ? 'text-amber-600' : (diff < 0 ? 'text-indigo-600' : 'text-slate-400')}">
+                                    (${diff > 0 ? '+' + diff : diff}%)
+                                </span>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 pcol-thesis ${portfolioSubView !== 'thesis' ? 'hidden' : ''}">
+                            <div class="flex items-center gap-2">
+                                <span class="ltr-num font-bold ${critFailed ? 'text-rose-600' : 'text-emerald-600'}">${okCount}/${totalKpis}</span>
+                                <span class="text-xs ${critFailed ? 'text-rose-700 dark:text-rose-400 font-semibold' : 'text-slate-600 dark:text-slate-400'}">
+                                    ${critFailed ? 'KPI קריטי נכשל!' : 'כל הקריטיים תקינים'}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 pcol-thesis ${portfolioSubView !== 'thesis' ? 'hidden' : ''}">
+                            <div class="text-xs font-medium text-slate-800 dark:text-slate-200">${c.trendLabel}</div>
+                            <div class="text-[11px] font-mono text-slate-500">דוח הבא: ${c.nextEarnings}</div>
+                        </td>
+                        <td class="py-3.5 px-4 pcol-fin ${portfolioSubView !== 'financial' ? 'hidden' : ''}">
+                            <div class="ltr-num font-bold text-slate-900 dark:text-white">${c.marketValue}</div>
+                            <div class="ltr-num text-xs font-semibold text-emerald-600">${c.pnl}</div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <button onclick="navigateToWorkspace('${c.ticker}')" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-indigo-700 dark:bg-slate-800 dark:hover:bg-indigo-600 text-white text-xs font-semibold transition-colors">
+                                מרחב עבודה ←
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            recalculateExposureMaps();
+        }
+
+        function updateTargetWeight(ticker, val) {
+            const num = Math.max(0, Math.min(100, parseInt(val) || 0));
+            COMPANIES[ticker].targetWeight = num;
+            renderPortfolioScreen();
+            showToast(`משקל היעד האישי עבור ${ticker} עודכן ל-${num}%`);
+        }
+
+        function recalculateExposureMaps() {
+            const list = Object.values(COMPANIES);
+            const themes = {};
+            const deps = {};
+
+            list.forEach(c => {
+                themes[c.themeTag] = (themes[c.themeTag] || 0) + c.actualWeight;
+                deps[c.dependencyTag] = (deps[c.dependencyTag] || 0) + c.actualWeight;
+            });
+
+            document.getElementById('exposure-themes-list').innerHTML = Object.entries(themes).map(([tag, pct]) => `
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">${tag}</span>
+                        <span class="ltr-num font-bold text-indigo-700 dark:text-indigo-400">${pct}%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-indigo-600 rounded-full" style="width: ${Math.min(100, pct)}%"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('exposure-deps-list').innerHTML = Object.entries(deps).map(([tag, pct]) => `
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">${tag}</span>
+                        <span class="ltr-num font-bold ${pct > 60 ? 'text-amber-600' : 'text-slate-700 dark:text-slate-300'}">${pct}%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full ${pct > 60 ? 'bg-amber-500' : 'bg-slate-500'} rounded-full" style="width: ${Math.min(100, pct)}%"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            const totalTarget = list.reduce((sum, c) => sum + c.targetWeight, 0);
+            const overWeight = list.filter(c => c.actualWeight > c.targetWeight).map(c => `${c.ticker} (+${c.actualWeight - c.targetWeight}%)`).join(', ');
+            document.getElementById('rebalance-summary').innerHTML = `
+                <div>• סך משקולות יעד מוגדרים: <strong class="ltr-num text-slate-900 dark:text-white">${totalTarget}%</strong> (מזומן יעד: <span class="ltr-num">${Math.max(0, 100 - totalTarget)}%</span>).</div>
+                <div>• חריגות מעל יעד אישי: <strong class="text-amber-700 dark:text-amber-400">${overWeight || 'אין חריגות'}</strong>.</div>
+                <div>• שים לב: <strong class="text-rose-700 dark:text-rose-400">NBIS</strong> מסומנת כ-Broken ודורשת הכרעה ביומן ההחלטות.</div>
+            `;
+        }
+
+        // SCREEN 3: COMPANY WORKSPACE RENDERING
+        function openWorkspace(ticker) {
+            activeWorkspaceTicker = ticker;
+            renderWorkspace(ticker);
+        }
+
+        function renderWorkspace(ticker) {
+            const c = COMPANIES[ticker];
+            ['NBIS', 'NVDA', 'AVGO', 'CCJ'].forEach(t => {
+                const btn = document.getElementById('ws-pill-' + t);
+                if (btn) {
+                    btn.className = t === ticker
+                        ? 'ws-pill px-3 py-1 rounded-lg font-mono text-xs font-bold bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs transition-all'
+                        : 'ws-pill px-3 py-1 rounded-lg font-mono text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-all';
+                }
+            });
+
+            document.getElementById('ws-title').textContent = `${c.name} (${c.ticker})`;
+            const sBadge = document.getElementById('ws-status-badge');
+            sBadge.textContent = c.statusLabel;
+            sBadge.className = `px-2.5 py-0.5 rounded-full text-xs font-bold ${c.statusStyle}`;
+
+            document.getElementById('ws-trend-badge').textContent = c.trendLabel;
+            document.getElementById('ws-integrity').textContent = c.integrity;
+            document.getElementById('ws-thesis-type').textContent = c.thesisType;
+            document.getElementById('ws-entry-meta').textContent = `Entry: ${c.entryPrice} • Weight ${c.actualWeight}% / Target ${c.targetWeight}%`;
+            document.getElementById('ws-variant').textContent = c.variantPerception;
+            document.getElementById('ws-killswitch').textContent = c.killSwitchRule;
+
+            // Module 2: Quantitative KPIs (Critical vs Supporting + Quarterly Timeline)
+            document.getElementById('ws-kpi-list').innerHTML = c.kpis.map(k => `
+                <div class="p-4 rounded-xl border ${k.ok ? 'bg-slate-50/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800' : 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-mono text-xs font-bold text-slate-900 dark:text-white">${k.name}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${k.tier === 'קריטי' ? 'bg-slate-900 text-white dark:bg-indigo-600' : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}">
+                                ${k.tier}
+                            </span>
+                            <span class="meta-tag bg-white dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">${k.source}</span>
+                            <span class="meta-tag bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">${k.fresh}</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs">
+                            <span>בפועל: <strong class="ltr-num text-sm ${k.ok ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600'}">${k.actual}</strong></span>
+                            <span class="text-slate-400">|</span>
+                            <span class="text-slate-600 dark:text-slate-400">תנאי סף: <strong class="ltr-num text-slate-800 dark:text-slate-200">${k.target}</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Quarterly Verification Timeline -->
+                    <div class="flex items-center gap-1.5 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                        ${k.quarters.map((q, idx) => `
+                            <div class="text-center px-1.5">
+                                <div class="text-[9px] font-mono text-slate-400">Q${idx + 1}</div>
+                                <div class="text-xs font-bold ${q === '✓' ? 'text-emerald-600' : 'text-rose-600'}">${q}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Module 3: Symmetric Bear Case Monitor
+            document.getElementById('ws-bear-list').innerHTML = (c.bearCases.length ? c.bearCases : [{ title: 'אין התראות נגד פתוחות', status: 'תקין ✓', detail: 'מעקב שוטף אחר גורמי סיכון מהדוחות.' }]).map(b => `
+                <div class="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold text-slate-900 dark:text-white">${b.title}</span>
+                        <span class="text-[11px] font-bold ${b.status.includes('⚠') ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400'}">${b.status}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">${b.detail}</p>
+                </div>
+            `).join('');
+
+            // Module 4: 3-Layer Evidence & SEC Redline Delta
+            document.getElementById('ws-evidence-timeline').innerHTML = (c.evidence.length ? c.evidence : [{
+                id: 'ev-none',
+                date: 'מעודכן להבוקר',
+                doc: 'SEC EDGAR Monitor',
+                phase: 'Phase 1',
+                fact: 'No material deviations or Risk Factor redlines detected in recent filings.',
+                aiInterpretation: 'החברה ממשיכה לפעול בהתאם לתחזיות שניתנו בדוח השנתי.',
+                impact: 'אין שינוי בתזה.',
+                severity: 'positive',
+                reviewed: true
+            }]).map(ev => `
+                <div id="${ev.id}" class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transition-all">
+                    <div class="bg-slate-50 dark:bg-slate-900 px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-900 dark:text-white">${ev.doc}</span>
+                            <span class="text-slate-400">•</span>
+                            <span class="text-slate-500">${ev.date}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="meta-tag bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${ev.phase}</span>
+                            ${ev.reviewed
+                                ? '<span class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">✓ אומת ע״י המשתמש</span>'
+                                : `<button onclick="markEvidenceReviewed('${c.ticker}', '${ev.id}')" class="px-2.5 py-0.5 rounded bg-slate-900 text-white dark:bg-indigo-600 text-[11px] font-semibold">אשר רלוונטיות ✓</button>
+                                   <button onclick="dismissEvidenceNoise('${c.ticker}', '${ev.id}')" class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[11px]">סמן כרעש</button>`
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Strictly Separated 3 Layers -->
+                    <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs bg-white dark:bg-slate-950/40">
+                        <!-- Layer 1: Source Fact -->
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+                            <div class="font-bold text-slate-800 dark:text-slate-200">1. עובדת מקור (Source Fact • Exact Quote)</div>
+                            <blockquote dir="ltr" class="font-mono text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed text-left">
+                                "${ev.fact}"
+                            </blockquote>
+                        </div>
+
+                        <!-- Layer 2: AI Interpretation -->
+                        <div class="p-3 rounded-xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 space-y-1.5">
+                            <div class="font-bold text-indigo-900 dark:text-indigo-300">2. פרשנות AI (AI Interpretation)</div>
+                            <p class="text-slate-700 dark:text-slate-300 leading-relaxed">${ev.aiInterpretation}</p>
+                        </div>
+
+                        <!-- Layer 3: Thesis Impact -->
+                        <div class="p-3 rounded-xl ${ev.severity === 'critical' ? 'bg-rose-50/60 border-rose-200 dark:bg-rose-950/30 dark:border-rose-800' : (ev.severity === 'warning' ? 'bg-amber-50/60 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800' : 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800')} border space-y-1.5">
+                            <div class="font-bold text-slate-900 dark:text-white">3. השפעה על התזה (Thesis Impact)</div>
+                            <p class="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">${ev.impact}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Module 5: Decision Log
+            renderDecisionLog(c);
+        }
+
+        function markEvidenceReviewed(ticker, evId) {
+            const ev = COMPANIES[ticker].evidence.find(e => e.id === evId);
+            if (ev) ev.reviewed = true;
+            renderWorkspace(ticker);
+            showToast('האירוע אומת כרלוונטי לתזה');
+        }
+
+        function dismissEvidenceNoise(ticker, evId) {
+            COMPANIES[ticker].evidence = COMPANIES[ticker].evidence.filter(e => e.id !== evId);
+            renderWorkspace(ticker);
+            showToast('האירוע סומן כרעש והוסר מהציר');
+        }
+
+        function renderDecisionLog(company) {
+            const container = document.getElementById('ws-decision-list');
+            container.innerHTML = (company.decisions.length ? company.decisions : [{ date: 'היום', action: 'אין החלטות מתועדות עדיין', price: '-', note: 'השתמש בטופס מימין כדי לתעד את ההחלטה הראשונה.' }]).map(d => `
+                <div class="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-slate-900 dark:text-white">${d.action}</span>
+                        <span class="font-mono text-[11px] text-slate-500">${d.date} • ${d.price}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">${d.note}</p>
+                </div>
+            `).join('');
+        }
+
+        function appendDecisionLog() {
+            const type = document.getElementById('decision-type-select').value;
+            const note = document.getElementById('decision-rationale-input').value.trim();
+            if (!note) {
+                showToast('נא לכתוב נימוק קצר לפני שמירת ההחלטה');
+                return;
+            }
+            const c = COMPANIES[activeWorkspaceTicker];
+            c.decisions.unshift({
+                date: '17.11.2026 (עכשיו)',
+                action: type,
+                price: c.entryPrice,
+                note: note
+            });
+
+            if (type.includes('סגירת פוזיציה')) {
+                c.lifecycle = 'Watching';
+                c.statusLabel = 'נסגרה • במעקב (Watching)';
+            } else if (type.includes('ללא שינוי')) {
+                c.statusLabel = 'נבחנה • התזה שלמה';
+            }
+
+            document.getElementById('decision-rationale-input').value = '';
+            renderWorkspace(activeWorkspaceTicker);
+            showToast(`ההחלטה עבור ${c.ticker} נשמרה ביומן ההחלטות`);
+        }
+
+        function openAuditModal() {
+            const c = COMPANIES[activeWorkspaceTicker];
+            const body = document.getElementById('audit-modal-body');
+            body.innerHTML = (c.auditTrail.length ? c.auditTrail : [{ ver: 'v1.0', date: 'Locked', change: 'תנאי התזה המקוריים נעולים במערכת.' }]).map(a => `
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+                    <div class="flex items-center justify-between font-mono font-bold text-indigo-700 dark:text-indigo-400">
+                        <span>${a.ver}</span>
+                        <span>${a.date}</span>
+                    </div>
+                    <p class="text-slate-700 dark:text-slate-300 leading-relaxed">${a.change}</p>
+                </div>
+            `).join('');
+            const m = document.getElementById('audit-modal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function closeAuditModal() {
+            const m = document.getElementById('audit-modal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        // SCREEN 4: RESEARCH & THESIS LAB
+        function loadLabTicker(ticker) {
+            activeLabTicker = ticker;
+            ['MSFT', 'CRWV', 'WIX'].forEach(t => {
+                const btn = document.getElementById('lab-btn-' + t);
+                btn.className = t === ticker
+                    ? 'lab-tick-btn px-3 py-1 rounded-lg font-mono text-xs font-bold bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs'
+                    : 'lab-tick-btn px-3 py-1 rounded-lg font-mono text-xs font-bold text-slate-600 dark:text-slate-400';
+            });
+
+            const data = LAB_TEMPLATES[ticker];
+            document.getElementById('lab-coverage-banner').classList.toggle('hidden', !data.isForeign20F);
+
+            // Render Compact Collapsible Fact Cards
+            document.getElementById('lab-fact-cards').innerHTML = data.factCards.map((fc, idx) => `
+                <div onclick="toggleFactCard(${idx})" class="card-surface rounded-2xl p-4 cursor-pointer hover:border-indigo-400 transition-all space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-[11px] font-bold text-slate-500">${fc.label}</span>
+                        <span class="meta-tag bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">${fc.sub2}</span>
+                    </div>
+                    <div class="ltr-num text-xl font-extrabold text-slate-900 dark:text-white">${fc.value}</div>
+                    <div class="text-xs font-medium text-slate-700 dark:text-slate-300">${fc.sub1}</div>
+                    <div id="fc-detail-${idx}" class="hidden pt-2 mt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        ${fc.detail}
+                    </div>
+                    <div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">לחץ לפירוט מקור ▾</div>
+                </div>
+            `).join('');
+
+            prefillLabAIDraft();
+            document.getElementById('lab-4q-result').classList.add('hidden');
+        }
+
+        function toggleFactCard(idx) {
+            document.getElementById('fc-detail-' + idx).classList.toggle('hidden');
+        }
+
+        function prefillLabAIDraft() {
+            const d = LAB_TEMPLATES[activeLabTicker].draft;
+            document.getElementById('lab-thesis-type').value = d.type;
+            document.getElementById('lab-theme-tag').value = d.theme;
+            document.getElementById('lab-f1').value = d.f1;
+            document.getElementById('lab-f2').value = d.f2;
+            document.getElementById('lab-f3').value = d.f3;
+            document.getElementById('lab-f4').value = d.f4;
+            document.getElementById('lab-f5').value = d.f5;
+            document.getElementById('lab-f6').value = d.f6;
+            document.getElementById('lab-f7').value = d.f7;
+
+            document.getElementById('lab-kpis-grid').innerHTML = d.kpis.map((k, i) => `
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div class="flex items-center justify-between gap-1">
+                        <input type="text" dir="ltr" value="${k.name}" class="editorial-input flex-1 px-2 py-1 rounded font-mono text-xs font-bold">
+                        <select class="editorial-input px-2 py-1 rounded text-[11px] font-bold">
+                            <option ${k.tier === 'קריטי' ? 'selected' : ''}>קריטי</option>
+                            <option ${k.tier === 'תומך' ? 'selected' : ''}>תומך</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 text-xs">
+                        <span class="meta-tag bg-white dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">${k.source}</span>
+                        <input type="text" dir="ltr" value="${k.cond}" class="editorial-input w-24 px-2 py-1 rounded font-mono text-xs font-bold text-indigo-700 dark:text-indigo-400">
+                    </div>
+                </div>
+            `).join('');
+
+            checkLabGate();
+        }
+
+        function simulateWeakLabGate() {
+            document.getElementById('lab-f1').value = 'חברה טובה עם צמיחה חזקה.';
+            checkLabGate();
+        }
+
+        function checkLabGate() {
+            const val = document.getElementById('lab-f1').value.trim();
+            const banner = document.getElementById('lab-gate-banner');
+            const status = document.getElementById('lab-gate-status');
+            const msg = document.getElementById('lab-gate-msg');
+            const lockBtn = document.getElementById('lab-lock-btn');
+
+            const isValid = val.length >= 40;
+            if (isValid) {
+                banner.className = 'p-4 rounded-xl border-r-4 border-r-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between gap-3';
+                status.className = 'font-bold text-emerald-800 dark:text-emerald-300';
+                status.textContent = 'סטטוס: תזה תקפה לנעילה (v1.0)';
+                msg.textContent = 'הנימוק המרכזי ותנאי ההפרכה מוגדרים בצורה חדה ומדידה.';
+                lockBtn.disabled = false;
+                lockBtn.className = 'px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold transition-colors shadow-xs';
+            } else {
+                banner.className = 'p-4 rounded-xl border-r-4 border-r-amber-500 bg-amber-50/70 dark:bg-amber-950/40 flex items-center justify-between gap-3';
+                status.className = 'font-bold text-amber-900 dark:text-amber-300';
+                status.textContent = 'סטטוס: סקירה בלבד (לא ניתן לנעול כפוזיציה פעילה)';
+                msg.textContent = 'חסר נימוק חד מדוע השוק טועה או מדוע היתרון יישמר לאורך זמן. הרחב את סעיף 1.';
+                lockBtn.disabled = true;
+                lockBtn.className = 'px-6 py-3 rounded-xl bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed text-xs sm:text-sm font-bold';
+            }
+        }
+
+        function runFourQuarterCheck() {
+            const data = LAB_TEMPLATES[activeLabTicker];
+            const box = document.getElementById('lab-4q-result');
+            box.classList.remove('hidden');
+            box.innerHTML = `
+                <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-slate-900 dark:text-white">תוצאות בדיקה לאחור על 4 הרבעונים האחרונים (4Q Historical Check):</span>
+                    <span class="meta-tag bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">SEC Historical Data</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                    ${data.draft.kpis.map(k => `
+                        <div class="p-3 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+                            <div class="font-mono font-bold text-slate-800 dark:text-slate-200">${k.name} (${k.cond})</div>
+                            <div class="grid grid-cols-4 gap-1 text-center font-mono text-[11px]">
+                                ${k.q4.map((val, idx) => `
+                                    <div class="p-1 rounded ${val.startsWith('✓') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'}">
+                                        <div class="text-[9px] opacity-70">Q${idx + 1}</div>
+                                        <div class="font-bold">${val}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function lockNewThesis() {
+            const data = LAB_TEMPLATES[activeLabTicker];
+            showToast(`התזה עבור ${data.ticker} ננעלה כגרסה v1.0 והועברה למעקב בתיק!`);
+            setTimeout(() => switchScreen('portfolio'), 900);
+        }
+
+        // TOAST HELPER
+        function showToast(msg) {
+            const banner = document.getElementById('toast-banner');
+            document.getElementById('toast-text').textContent = msg;
+            banner.classList.remove('hidden');
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => banner.classList.add('hidden'), 3200);
+        }
+
+        // INITIALIZE APP
+        renderPortfolioScreen();
+        renderWorkspace('NBIS');
+        loadLabTicker('MSFT');
+    </script>
+</body>
+</html>
