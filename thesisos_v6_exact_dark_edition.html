@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThesisOS | מערכת הפעלה להשקעות וניהול תזות</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Heebo', 'Inter', 'sans-serif'],
+                        num: ['Inter', 'Heebo', 'sans-serif'],
+                    },
+                    colors: {
+                        obsidian: '#0D0D0F',
+                        surface: '#141417',
+                        surfaceHover: '#1A1A1F',
+                        borderSubtle: '#222226',
+                        pos: '#22C55E',
+                        neg: '#EF4444',
+                        warn: '#F59E0B',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #0D0D0F;
+            color: #F4F4F6;
+            font-family: 'Heebo', 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        .num {
+            font-family: 'Inter', sans-serif;
+            font-variant-numeric: tabular-nums;
+            direction: ltr;
+            display: inline-block;
+        }
+        .card {
+            background-color: #141417;
+            border: 1px solid #222226;
+            border-radius: 16px;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .card-hover:hover {
+            background-color: #1A1A1F;
+            border-color: #2E2E34;
+        }
+        .pill-input {
+            background-color: #141417;
+            border: 1px solid #222226;
+            color: #F4F4F6;
+            transition: border-color 0.15s ease;
+        }
+        .pill-input:focus {
+            outline: none;
+            border-color: #3F3F46;
+        }
+        .nav-item {
+            color: #9CA3AF;
+            border-radius: 12px;
+            transition: all 0.15s ease;
+        }
+        .nav-item:hover {
+            color: #F4F4F6;
+            background-color: #141417;
+        }
+        .nav-item.active {
+            color: #FFFFFF;
+            background-color: #1A1A1F;
+            font-weight: 600;
+        }
+        .subtab-btn {
+            color: #71717A;
+            padding-bottom: 10px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s ease;
+        }
+        .subtab-btn:hover {
+            color: #E4E4E7;
+        }
+        .subtab-btn.active {
+            color: #FFFFFF;
+            border-bottom-color: #FFFFFF;
+            font-weight: 600;
+        }
+        .pulse-ring {
+            animation: ringPulse 2s ease-out;
+        }
+        @keyframes ringPulse {
+            0% { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.55); border-color: #22C55E; }
+            100% { box-shadow: none; }
+        }
+        /* Custom ultra-thin dark scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #0D0D0F; }
+        ::-webkit-scrollbar-thumb { background: #27272A; border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- ======================================================================= -->
+    <!-- TOP HEADER: CENTERED DARK SEARCH PILL (EXACT REPLICA OF SCREENSHOTS)    -->
+    <!-- ======================================================================= -->
+    <header class="sticky top-0 z-40 h-16 bg-[#0D0D0F]/90 backdrop-blur-md border-b border-[#19191D] px-4 lg:px-6 flex items-center justify-between gap-4">
+        
+        <!-- Right: Mobile Menu Button + Brand Identity -->
+        <div class="flex items-center gap-3">
+            <button onclick="toggleRightDrawer()" class="xl:hidden p-2 rounded-xl bg-[#141417] border border-[#222226] text-zinc-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <button onclick="navigate('home')" class="flex items-center gap-2.5 group">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                </div>
+                <div class="text-right">
+                    <span class="font-bold text-base tracking-tight text-white">ThesisOS</span>
+                    <span class="hidden sm:inline-block text-[11px] text-zinc-500 mr-1.5">Investment OS</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- Center: Exact Centered Dark Search Pill ("חיפוש מניות" + "/") -->
+        <div class="relative flex-1 max-w-md mx-auto">
+            <div class="relative flex items-center">
+                <svg class="w-4 h-4 text-zinc-500 absolute right-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input id="search-input" type="text" autocomplete="off"
+                    onfocus="showSearchMenu()" oninput="renderSearchMenu(this.value)"
+                    placeholder="חיפוש מניות"
+                    class="w-full h-10 pr-11 pl-10 rounded-full bg-[#141417] border border-[#222226] text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition-colors">
+                <span class="absolute left-3.5 w-5 h-5 rounded-md bg-[#1E1E22] border border-[#2A2A30] text-[11px] font-num text-zinc-400 flex items-center justify-center">/</span>
+            </div>
+
+            <!-- Instant Search Dropdown -->
+            <div id="search-menu" class="hidden absolute top-12 right-0 left-0 bg-[#141417] border border-[#27272C] rounded-2xl shadow-2xl overflow-hidden z-50">
+                <div class="px-4 py-2 text-[11px] text-zinc-500 border-b border-[#222226] flex justify-between">
+                    <span>בחר חברה לפתיחת מרחב עבודה ותזה</span>
+                    <span class="num">ESC לסגירה</span>
+                </div>
+                <div id="search-menu-items" class="max-h-72 overflow-y-auto divide-y divide-[#1E1E22]"></div>
+            </div>
+        </div>
+
+        <!-- Left: Notification Bell + Data Freshness -->
+        <div class="flex items-center gap-2.5">
+            <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#141417] border border-[#222226] text-[11px] text-zinc-400">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>SEC & IBKR מסונכרן</span>
+            </div>
+            <button onclick="navigate('home')" class="relative p-2.5 rounded-full bg-[#141417] border border-[#222226] text-zinc-400 hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ======================================================================= -->
+    <!-- THREE-COLUMN FEY-INSPIRED ARCHITECTURE                                  -->
+    <!-- RIGHT RAIL: Nav + Recent Actions + Watchlist                            -->
+    <!-- CENTER STAGE: Main Fluid Canvas                                         -->
+    <!-- LEFT RAIL: Quick Thesis/Portfolio Cards + Upcoming Events + News        -->
+    <!-- ======================================================================= -->
+    <div class="flex-1 flex relative max-w-[1680px] w-full mx-auto">
+
+        <!-- 1. RIGHT RAIL (Navigation + Recent Actions + Watchlist — Exact Match) -->
+        <aside id="right-rail" class="fixed xl:sticky top-16 right-0 z-30 h-[calc(100vh-4rem)] w-60 bg-[#0D0D0F] border-l border-[#19191D] p-3.5 flex flex-col justify-between overflow-y-auto transform translate-x-full xl:translate-x-0 transition-transform duration-200 shrink-0">
+            
+            <div class="space-y-6">
+                <!-- Primary Navigation -->
+                <nav class="space-y-1">
+                    <button onclick="navigate('home')" id="nav-home" class="nav-item active w-full flex items-center justify-between px-3.5 py-2.5 text-sm">
+                        <span class="flex items-center gap-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                            <span>בית</span>
+                        </span>
+                        <span class="num text-[11px] px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-400 font-semibold">3</span>
+                    </button>
+
+                    <button onclick="navigate('portfolio')" id="nav-portfolio" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 text-sm">
+                        <span class="flex items-center gap-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                            <span>התיק של דביר</span>
+                        </span>
+                    </button>
+
+                    <button onclick="navigate('workspace')" id="nav-workspace" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 text-sm">
+                        <span class="flex items-center gap-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <span>מרחב חברה ותזה</span>
+                        </span>
+                        <span id="rail-active-ticker" class="num text-[11px] text-zinc-400">NVDA</span>
+                    </button>
+
+                    <button onclick="navigate('lab')" id="nav-lab" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 text-sm">
+                        <span class="flex items-center gap-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                            <span>מעבדת תזה וסורק</span>
+                        </span>
+                    </button>
+                </nav>
+
+                <!-- פעולות אחרונות (Recent Actions — matching screenshot right rail) -->
+                <div class="space-y-2">
+                    <div class="px-2 flex items-center justify-between text-xs font-medium text-zinc-500">
+                        <span>פעולות אחרונות & יומן ›</span>
+                    </div>
+                    <div class="space-y-1">
+                        <button onclick="openCompany('NBIS', 'thesis')" class="w-full px-2.5 py-2 rounded-xl hover:bg-[#141417] flex items-center justify-between text-xs transition-colors">
+                            <span class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-rose-500/15 text-rose-400 font-num font-bold text-[10px] flex items-center justify-center">NB</span>
+                                <span class="text-zinc-400">הפרת Kill-Switch</span>
+                            </span>
+                            <span class="num font-semibold text-white">NBIS</span>
+                        </button>
+                        <button onclick="openCompany('AVGO', 'thesis')" class="w-full px-2.5 py-2 rounded-xl hover:bg-[#141417] flex items-center justify-between text-xs transition-colors">
+                            <span class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-emerald-500/15 text-emerald-400 font-num font-bold text-[10px] flex items-center justify-center">AV</span>
+                                <span class="text-zinc-400">אימות Form 4</span>
+                            </span>
+                            <span class="num font-semibold text-white">AVGO</span>
+                        </button>
+                        <button onclick="openCompany('NVDA', 'journal')" class="w-full px-2.5 py-2 rounded-xl hover:bg-[#141417] flex items-center justify-between text-xs transition-colors">
+                            <span class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-amber-500/15 text-amber-400 font-num font-bold text-[10px] flex items-center justify-center">NV</span>
+                                <span class="text-zinc-400">איזון משקל 30%</span>
+                            </span>
+                            <span class="num font-semibold text-white">NVDA</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- רשימת מעקב (Watchlist with Circular Logos & Thesis Status Dots) -->
+                <div class="space-y-2">
+                    <div class="px-2 flex items-center justify-between text-xs font-medium text-zinc-500">
+                        <span>פוזיציות ורשימת מעקב ›</span>
+                    </div>
+                    <div id="rail-watchlist" class="space-y-0.5">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Status -->
+            <div class="pt-4 border-t border-[#19191D] px-2 flex items-center justify-between text-[11px] text-zinc-500">
+                <span>IBKR Flex Sync</span>
+                <span class="num text-emerald-400">07:30</span>
+            </div>
+        </aside>
+
+
+        <!-- 2. CENTER MAIN STAGE (Fluid, Minimalist Dark Canvas) -->
+        <main class="flex-1 min-w-0 px-4 sm:px-7 py-6 space-y-8">
+
+            <!-- =============================================================== -->
+            <!-- SCREEN 1: HOME (בית — S&P 500 + תדריך בוקר ותזות + מניות שזזו)  -->
+            <!-- =============================================================== -->
+            <section id="view-home" class="space-y-8">
+                
+                <!-- Top Market Hero (Exact layout of Screenshot 3a9241) -->
+                <div class="space-y-5">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        <div>
+                            <div class="text-sm text-zinc-400 mb-1">S&P 500</div>
+                            <div class="flex items-baseline gap-3">
+                                <span class="num text-4xl sm:text-5xl font-bold text-white tracking-tight">7,416.45</span>
+                                <span class="num text-sm font-semibold px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-400">-1.92%</span>
+                                <span class="num text-xs text-rose-400">-145.22 • היום</span>
+                            </div>
+                        </div>
+
+                        <!-- Horizontal Index Strip (Exact order from Screenshot 3a9241) -->
+                        <div class="flex flex-wrap items-center gap-4 text-xs">
+                            <div class="flex items-center gap-1.5">
+                                <span class="num font-semibold text-emerald-400">+18.70%</span>
+                                <span class="text-zinc-400">VIX</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="num font-semibold text-rose-400">-2.67%</span>
+                                <span class="text-zinc-400">Nasdaq 100</span>
+                            </div>
+                            <div class="px-3 py-1.5 rounded-lg bg-[#1A1A1F] border border-[#27272C] flex items-center gap-1.5">
+                                <span class="num font-semibold text-rose-400">-1.92%</span>
+                                <span class="text-white font-medium">S&P 500</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="num font-semibold text-rose-400">-1.70%</span>
+                                <span class="text-zinc-400">Russell 2000</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="num font-semibold text-rose-400">-1.41%</span>
+                                <span class="text-zinc-400">Dow Jones</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="num font-semibold text-emerald-400">+0.14%</span>
+                                <span class="text-zinc-400">Dollar Index</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Minimalist Line Chart with Dashed "סגירה קודמת" Reference Line -->
+                    <div class="relative w-full h-52 pt-4">
+                        <div class="flex items-center justify-between text-[11px] text-zinc-500 mb-1">
+                            <span>סגירה קודמת</span>
+                            <span class="num">$7,561.67</span>
+                        </div>
+                        <svg viewBox="0 0 900 170" class="w-full h-full overflow-visible">
+                            <line x1="0" y1="22" x2="900" y2="22" stroke="#27272A" stroke-width="1" stroke-dasharray="4 4"/>
+                            <path d="M0,45 L35,38 L70,58 L110,49 L155,72 L195,68 L240,84 L290,79 L340,96 L395,92 L450,112 L510,105 L565,124 L620,118 L680,136 L740,128 L800,145 L850,139 L900,148"
+                                fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Segmented Switcher Below Chart: תדריך הבוקר ותזות | המניות שזזו בתיק | סקטורים -->
+                <div class="space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-lg font-bold text-white">תדריך הבוקר — מצב התזות בתיק</h2>
+                            <span class="text-xs text-zinc-500">• 3 אירועים מהותיים בלבד</span>
+                        </div>
+                        <div class="inline-flex bg-[#141417] p-1 rounded-xl border border-[#222226] text-xs">
+                            <button onclick="setHomeTab('briefing')" id="htab-briefing" class="px-3.5 py-1.5 rounded-lg bg-[#222226] text-white font-semibold">תדריך תזות</button>
+                            <button onclick="setHomeTab('movers')" id="htab-movers" class="px-3.5 py-1.5 rounded-lg text-zinc-400 hover:text-white">המניות שזזו (Sparklines)</button>
+                        </div>
+                    </div>
+
+                    <!-- HOME TAB 1: THESIS MORNING BRIEFING + HIDDEN EXPOSURE + QUIET STOCKS -->
+                    <div id="home-panel-briefing" class="space-y-4">
+                        
+                        <!-- Hidden Exposure Strip (Clean 1-line Bento Card) -->
+                        <div onclick="navigate('portfolio'); setPortfolioViewMode('heatmap');" class="card card-hover p-4 flex flex-wrap items-center justify-between gap-3 cursor-pointer border-r-2 border-r-amber-500">
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-400 text-xs font-semibold">חשיפה נסתרת בתיק</span>
+                                <span class="text-xs sm:text-sm text-zinc-200">
+                                    <strong class="num text-amber-400">85%</strong> מהתיק המושקע (<span class="num text-zinc-400">NVDA, AVGO, VRT, NBIS, TSM</span>) יושב על אותה תמת-על: <strong>השקעות הון בתשתיות AI</strong>.
+                                </span>
+                            </div>
+                            <span class="text-xs text-zinc-400">למפת החשיפות ←</span>
+                        </div>
+
+                        <!-- 3 Filtered Thesis Alert Cards -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                            <!-- NBIS -->
+                            <div onclick="openCompany('NBIS', 'thesis')" class="card card-hover p-5 cursor-pointer flex flex-col justify-between space-y-4">
+                                <div class="space-y-2.5">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-7 h-7 rounded-full bg-rose-500/20 text-rose-400 font-num font-bold text-xs flex items-center justify-center">NB</span>
+                                            <span class="num font-bold text-sm text-white">NBIS</span>
+                                        </div>
+                                        <span class="px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-400 text-[11px] font-semibold">✕ Kill-Switch הופר</span>
+                                    </div>
+                                    <h3 class="text-sm font-bold text-white leading-snug">
+                                        קצב הכנסות AI ARR הגיע ל-<span class="num text-rose-400">$365M</span> (מתחת לסף ההפרכה של <span class="num">$400M</span>)
+                                    </h3>
+                                    <p class="text-xs text-zinc-400 leading-relaxed">
+                                        עיכוב חיבור חשמל בפינלנד דחה הכרה בהכנסות. דורש החלטה ביומן המניה.
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t border-[#1E1E22] flex items-center justify-between text-[11px] text-zinc-500">
+                                    <span class="num">SEC 6-K • הבוקר</span>
+                                    <span class="text-zinc-300 font-medium">פתח במרחב החברה ←</span>
+                                </div>
+                            </div>
+
+                            <!-- NVDA -->
+                            <div onclick="openCompany('NVDA', 'thesis')" class="card card-hover p-5 cursor-pointer flex flex-col justify-between space-y-4">
+                                <div class="space-y-2.5">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-num font-bold text-xs flex items-center justify-center">NV</span>
+                                            <span class="num font-bold text-sm text-white">NVDA</span>
+                                        </div>
+                                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[11px] font-semibold">⚠ 10-Q Redline</span>
+                                    </div>
+                                    <h3 class="text-sm font-bold text-white leading-snug">
+                                        עלייה בריכוזיות לקוחות ל-<span class="num text-amber-400">49%</span> והאצת פיתוח שבבי ASIC עצמאיים
+                                    </h3>
+                                    <p class="text-xs text-zinc-400 leading-relaxed">
+                                        כל 3 מדדי ה-KPI תקינים (<span class="num">3/3</span>), אך תרחיש הנגד התחזק ומשקל התיק (<span class="num">34%</span>) מעל היעד (<span class="num">30%</span>).
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t border-[#1E1E22] flex items-center justify-between text-[11px] text-zinc-500">
+                                    <span class="num">SEC 10-Q • Item 1A</span>
+                                    <span class="text-zinc-300 font-medium">השווה ציטוט ←</span>
+                                </div>
+                            </div>
+
+                            <!-- AVGO -->
+                            <div onclick="openCompany('AVGO', 'thesis')" class="card card-hover p-5 cursor-pointer flex flex-col justify-between space-y-4">
+                                <div class="space-y-2.5">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-400 font-num font-bold text-xs flex items-center justify-center">AV</span>
+                                            <span class="num font-bold text-sm text-white">AVGO</span>
+                                        </div>
+                                        <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[11px] font-semibold">✓ חיזוק תזה</span>
+                                    </div>
+                                    <h3 class="text-sm font-bold text-white leading-snug">
+                                        רכישת בעלי עניין בשוק הפתוח בהיקף <span class="num text-emerald-400">$1.85M</span> לקראת דוח Q4
+                                    </h3>
+                                    <p class="text-xs text-zinc-400 leading-relaxed">
+                                        דירקטור בחברה הגדיל החזקה מכסף אישי. כל מדדי התזה עומדים ביעד (<span class="num">3/3</span>).
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t border-[#1E1E22] flex items-center justify-between text-[11px] text-zinc-500">
+                                    <span class="num">SEC Form 4 • Code P</span>
+                                    <span class="text-zinc-300 font-medium">צפה בדיווח ←</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quiet Positions ("מה לא השתנה") -->
+                        <div class="card p-4 flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center gap-2 text-xs text-zinc-400">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                <span class="font-semibold text-zinc-200">מה לא השתנה (אין רעש):</span>
+                                <span>למרות תנודות המחיר היומיות, לא חל כל שינוי בהנחות היסוד של</span>
+                                <button onclick="openCompany('VRT')" class="num text-white underline hover:text-emerald-400">VRT (3/3 ✓)</button>
+                                <span>ו-</span>
+                                <button onclick="openCompany('TSM')" class="num text-white underline hover:text-emerald-400">TSM (3/3 ✓)</button>
+                            </div>
+                            <span class="text-[11px] text-zinc-500">42 ידיעות סוננו החוצה</span>
+                        </div>
+                    </div>
+
+                    <!-- HOME TAB 2: SPARKLINE MOVERS CARDS (Exact Replica of Screenshot 3a8f5a) -->
+                    <div id="home-panel-movers" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+                        <!-- Populated dynamically with crisp mini sparklines -->
+                    </div>
+                </div>
+
+            </section>
+
+
+            <!-- =============================================================== -->
+            <!-- SCREEN 2: MY PORTFOLIO (התיק שלי — Exact Clone of 3a8e88 & 3a1ade) -->
+            <!-- =============================================================== -->
+            <section id="view-portfolio" class="hidden space-y-6">
+                
+                <!-- Top Sub-Tabs: סטטוס | היסטוריה | רשימת מעקב (Exact Screenshot 3a1ade) -->
+                <div class="flex items-center justify-between border-b border-[#1E1E22]">
+                    <div class="flex items-center gap-6 text-sm">
+                        <button onclick="setPortfolioSubTab('active')" id="ptab-active" class="subtab-btn active">סטטוס</button>
+                        <button onclick="setPortfolioSubTab('history')" id="ptab-history" class="subtab-btn">היסטוריה</button>
+                        <button onclick="setPortfolioSubTab('watchlist')" id="ptab-watchlist" class="subtab-btn">רשימת מעקב</button>
+                    </div>
+                    <span class="text-xs text-zinc-500">מקור אמת: IBKR Flex + יעדים אישיים</span>
+                </div>
+
+                <!-- Hero Portfolio Value + 5 Dark Metric Pills (Exact Clone of Screenshot 3a1ade) -->
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                    <div>
+                        <div class="num text-3xl sm:text-4xl font-bold text-white tracking-tight">$1,953,217</div>
+                        <div class="flex items-center gap-2 mt-1 text-xs">
+                            <span class="num font-semibold text-rose-400">-$79,804 (-4.09%)</span>
+                            <span class="text-zinc-500">היום</span>
+                        </div>
+                    </div>
+
+                    <!-- 5 Rounded Stat Cards -->
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                        <div class="card px-3.5 py-2.5 text-left">
+                            <div class="flex items-baseline justify-between gap-2">
+                                <span class="num text-[11px] text-zinc-500">9.93%</span>
+                                <span class="num text-sm font-bold text-white">$193,886</span>
+                            </div>
+                            <div class="text-[11px] text-zinc-500 mt-0.5 text-right">מזומן</div>
+                        </div>
+
+                        <div class="card px-3.5 py-2.5 text-left">
+                            <div class="num text-sm font-bold text-emerald-400">+23.99%</div>
+                            <div class="text-[11px] text-zinc-500 mt-0.5 text-right">ממוצע תשואה לפוזיציה</div>
+                        </div>
+
+                        <div class="card px-3.5 py-2.5 text-left">
+                            <div class="num text-sm font-bold text-white">67%</div>
+                            <div class="text-[11px] text-zinc-500 mt-0.5 text-right">פוזיציות ברווח</div>
+                        </div>
+
+                        <div class="card px-3.5 py-2.5 text-left">
+                            <div class="num text-sm font-bold text-emerald-400">+$453,352</div>
+                            <div class="text-[11px] text-zinc-500 mt-0.5 text-right">ממומש</div>
+                        </div>
+
+                        <div class="card px-3.5 py-2.5 text-left">
+                            <div class="num text-sm font-bold text-emerald-400">+$112,196</div>
+                            <div class="text-[11px] text-zinc-500 mt-0.5 text-right">לא ממומש</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Minimal Portfolio Intraday Line with Dashed "לפני יום" -->
+                <div class="w-full h-36">
+                    <div class="flex justify-between text-[11px] text-zinc-500 mb-1">
+                        <span>לפני יום</span>
+                        <span class="num">$2,033,021.06</span>
+                    </div>
+                    <svg viewBox="0 0 900 110" class="w-full h-full overflow-visible">
+                        <line x1="0" y1="15" x2="900" y2="15" stroke="#27272A" stroke-width="1" stroke-dasharray="4 4"/>
+                        <path d="M0,25 L55,14 L110,36 L175,28 L240,48 L310,42 L385,61 L460,55 L540,74 L620,68 L700,82 L780,79 L845,91 L900,88"
+                            fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <!-- View Switcher: טבלה | תמונת מצב (Exact Screenshot 3a1ade) -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#1E1E22]">
+                    <div class="flex items-center gap-6 text-sm">
+                        <button onclick="setPortfolioViewMode('table')" id="pview-table" class="subtab-btn active">טבלה</button>
+                        <button onclick="setPortfolioViewMode('heatmap')" id="pview-heatmap" class="subtab-btn">תמונת מצב</button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input id="portfolio-filter-input" type="text" oninput="renderPortfolioTable()" placeholder="חיפוש טיקר או שם..." class="pill-input h-8 px-3 rounded-full text-xs w-44">
+                        <select id="portfolio-theme-filter" onchange="renderPortfolioTable()" class="pill-input h-8 px-3 rounded-full text-xs">
+                            <option value="ALL">כל התמות / סקטורים</option>
+                            <option value="AI Datacenter">AI Datacenter</option>
+                            <option value="שבבים">שבבים</option>
+                            <option value="תשתיות AI">תשתיות AI</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- TABLE VIEW (Exact Columns from Screenshot 3a1ade + ThesisOS KPI & Target Weight) -->
+                <div id="portfolio-table-wrap" class="card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse">
+                            <thead>
+                                <tr class="border-b border-[#222226] text-[11px] font-medium text-zinc-500">
+                                    <th class="py-3.5 px-4">טיקר</th>
+                                    <th class="py-3.5 px-4">סקטור ותמת תזה</th>
+                                    <th class="py-3.5 px-4">רווח / הפסד</th>
+                                    <th class="py-3.5 px-4">שינוי יומי</th>
+                                    <th class="py-3.5 px-4">מחיר נוכחי</th>
+                                    <th class="py-3.5 px-4">מחיר קנייה</th>
+                                    <th class="py-3.5 px-4">שווי פוזיציה</th>
+                                    <th class="py-3.5 px-4">משקל מול יעד שלך</th>
+                                    <th class="py-3.5 px-4">דוח קרוב</th>
+                                    <th class="py-3.5 px-4">סטטוס תזה ואזהרות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="portfolio-tbody" class="divide-y divide-[#1C1C20] text-xs sm:text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- HEATMAP VIEW (Exact Treemap Clone of Screenshot 3a8e88 + Hidden Exposure) -->
+                <div id="portfolio-heatmap-wrap" class="hidden space-y-4">
+                    <div class="flex items-center justify-between text-xs text-zinc-400">
+                        <span>פילוח אחזקות לפי תמת השקעה וסקטור (לחץ על אריח לפתיחת התזה)</span>
+                        <span>37 אחזקות • חשיפה ל-AI Datacenter: <strong class="num text-amber-400">85%</strong></span>
+                    </div>
+                    <div id="portfolio-treemap" class="grid grid-cols-1 md:grid-cols-12 gap-2.5"></div>
+                </div>
+
+            </section>
+
+
+            <!-- =============================================================== -->
+            <!-- SCREEN 3: COMPANY WORKSPACE (מרחב חברה — 3a8b98 / 3a8aa9 / 3a8438) -->
+            <!-- =============================================================== -->
+            <section id="view-workspace" class="hidden space-y-6">
+                
+                <!-- Company Top Header (Exact Match to Screenshot 3a8b98) -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <div id="cw-logo" class="w-11 h-11 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-num font-bold text-sm flex items-center justify-center">NVDA</div>
+                        <div>
+                            <div class="flex items-center gap-2.5">
+                                <h1 id="cw-name" class="text-xl sm:text-2xl font-bold text-white">NVIDIA Corporation</h1>
+                                <span id="cw-ticker" class="num text-xs text-zinc-500">NVDA</span>
+                                <span id="cw-filer-badge" class="text-[11px] px-2 py-0.5 rounded-md bg-[#141417] border border-[#222226] text-zinc-400 num">SEC 10-Q</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mt-1">
+                                <span id="cw-sector-pill" class="text-[11px] px-2.5 py-0.5 rounded-full bg-[#141417] border border-[#222226] text-zinc-300">שבבים</span>
+                                <span id="cw-theme-pill" class="text-[11px] px-2.5 py-0.5 rounded-full bg-[#141417] border border-[#222226] text-indigo-400">AI Datacenter</span>
+                                <span id="cw-thesis-status-badge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-semibold">⚠ דורש בדיקה (3/3 KPIs)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="text-left">
+                            <div id="cw-price" class="num text-3xl font-bold text-white">$155.83</div>
+                            <div id="cw-change" class="num text-xs font-semibold text-rose-400">-4.31% היום</div>
+                        </div>
+                        <button onclick="openAuditDrawer()" class="px-3.5 py-2 rounded-xl bg-[#141417] hover:bg-[#1E1E24] border border-[#222226] text-xs font-medium text-zinc-200 transition-colors">
+                            🔒 Audit Trail
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Clean Price Line Chart with Dashed Previous Close (Exact Screenshot 3a8b98) -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs text-zinc-500">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-[#141417] border border-[#222226] text-zinc-300">מחיר</span>
+                            <span class="px-2.5 py-1 rounded-lg text-zinc-500">12 חודשים</span>
+                        </div>
+                        <span>סגירה קודמת • <span id="cw-prev-close" class="num">$162.85</span></span>
+                    </div>
+                    <div id="cw-price-svg" class="w-full h-44"></div>
+                </div>
+
+                <!-- Horizontal Metric Pills Row (Exact Dark Rounded Boxes from Screenshot 3a8b98) -->
+                <div id="cw-metrics-row" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5"></div>
+
+                <!-- Sub-Tabs inside Company Page: התזה ו-Kill-Switch | מחקר וסיכום (Sankey) | אנליסטים | יומן החלטות -->
+                <div class="flex items-center gap-6 border-b border-[#1E1E22] text-sm overflow-x-auto">
+                    <button onclick="setCompanyTab('thesis')" id="cwtab-thesis" class="subtab-btn active whitespace-nowrap">התזה ו-Kill-Switch</button>
+                    <button onclick="setCompanyTab('financials')" id="cwtab-financials" class="subtab-btn whitespace-nowrap">מחקר ונתונים (Sankey)</button>
+                    <button onclick="setCompanyTab('analysts')" id="cwtab-analysts" class="subtab-btn whitespace-nowrap">אנליסטים</button>
+                    <button onclick="setCompanyTab('journal')" id="cwtab-journal" class="subtab-btn whitespace-nowrap">יומן החלטות (<span id="cw-log-count" class="num">2</span>)</button>
+                </div>
+
+                <!-- TAB 1: THESIS & KILL-SWITCH (The ThesisOS Core) -->
+                <div id="cw-panel-thesis" class="space-y-5">
+                    
+                    <!-- Locked Thesis & Variant Perception -->
+                    <div class="card p-5 space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#1E1E22]">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-bold text-white">התזה הנעולה (Locked Thesis)</span>
+                                <span id="cw-thesis-type" class="text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400">Quality Compounder</span>
+                            </div>
+                            <span class="text-xs text-emerald-400 font-medium">שלמות תזה: 5/5 כללים מוגדרים ✓</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 rounded-xl bg-[#0D0D0F] border border-[#1E1E22] space-y-1.5">
+                                <div class="text-xs font-semibold text-emerald-400">למה השוק טועה / ליבת היתרון (Variant Perception)</div>
+                                <p id="cw-variant" class="text-xs sm:text-sm text-zinc-200 leading-relaxed"></p>
+                            </div>
+                            <div class="p-4 rounded-xl bg-[#0D0D0F] border border-rose-500/20 space-y-1.5">
+                                <div class="text-xs font-semibold text-rose-400">תנאי הפרכה ראשי (Kill-Switch Rule)</div>
+                                <p id="cw-killswitch" class="text-xs sm:text-sm text-zinc-200 leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KPIs + Bear Case Monitor Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                        <div class="lg:col-span-7 card p-5 space-y-3.5">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-sm font-bold text-white">מוניטור KPIs כמותי (ציר בדיקה רבעוני)</h3>
+                                <span class="text-[11px] text-zinc-500">קריטי vs תומך</span>
+                            </div>
+                            <div id="cw-kpis-list" class="space-y-2.5"></div>
+                        </div>
+
+                        <div class="lg:col-span-5 card p-5 space-y-3.5">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-sm font-bold text-white">Bear Case Monitor (Counter-Analyst)</h3>
+                                <span class="text-[11px] text-rose-400">מניעת הטיית אישור</span>
+                            </div>
+                            <div id="cw-bear-list" class="space-y-2.5"></div>
+                        </div>
+                    </div>
+
+                    <!-- 3-Layer Verification & SEC Redline Delta -->
+                    <div class="card p-5 space-y-3.5">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-white">אימות תלת-שלבי ושינויי ניסוח בדוחות (SEC Redline)</h3>
+                                <p class="text-xs text-zinc-500">הפרדה מוחלטת בין ציטוט המקור ← פרשנות ה-AI ← השפעה על התזה</p>
+                            </div>
+                        </div>
+                        <div id="cw-evidence-list" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: RESEARCH & FINANCIALS (Exact Match to Screenshots 3a8b5e & 3a8aa9) -->
+                <div id="cw-panel-financials" class="hidden space-y-5">
+                    
+                    <!-- Row 1: Moat Card (חפיר 9/10 segmented bar) + About Company (מי החברה) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                        <div class="lg:col-span-5 card p-5 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-sm font-bold text-white">חפיר (Moat)</h3>
+                                <span id="cw-moat-score" class="num text-base font-bold text-white">9/10</span>
+                            </div>
+                            <div id="cw-moat-bars" class="grid grid-cols-10 gap-1.5 py-1"></div>
+                            <p id="cw-moat-desc" class="text-xs text-zinc-400 leading-relaxed"></p>
+                        </div>
+
+                        <div class="lg:col-span-7 card p-5 space-y-2.5">
+                            <h3 class="text-sm font-bold text-white">מי החברה</h3>
+                            <p id="cw-about" class="text-xs sm:text-sm text-zinc-400 leading-relaxed"></p>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Interactive SVG Sankey Diagram ("מקורות ההכנסה ולאן היא הולכת" — Exact Screenshot 3a8aa9) -->
+                    <div class="card p-5 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-white">מקורות ההכנסה ולאן היא הולכת (Income Flow Sankey)</h3>
+                                <p class="text-xs text-zinc-500">המחשה ויזואלית של מעבר ההכנסות לרווח גולמי, הוצאות תפעול ורווח נקי</p>
+                            </div>
+                            <span class="text-xs px-2.5 py-1 rounded-lg bg-[#0D0D0F] border border-[#222226] text-zinc-400">שנתי • SEC 10-K</span>
+                        </div>
+                        <div id="cw-sankey-wrap" class="w-full overflow-x-auto py-2"></div>
+                    </div>
+
+                    <!-- Row 3: Bottom Red Flags Warning Cards ("סימני אזהרה" — Exact Clone of Screenshot 3a8aa9) -->
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-bold text-white">סימני אזהרה</h3>
+                        <div id="cw-warnings-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3.5"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: SMART ANALYSTS (Exact Clone of Screenshot 3a8438) -->
+                <div id="cw-panel-analysts" class="hidden space-y-5">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+                        <div class="card p-4 space-y-1">
+                            <div class="text-xs text-zinc-400">המלצת אנליסטים</div>
+                            <div class="text-xl font-bold text-emerald-400">קנייה</div>
+                            <div class="text-[11px] text-zinc-500">מבוסס על 24 דירוגים</div>
+                        </div>
+                        <div class="card p-4 space-y-1">
+                            <div class="text-xs text-zinc-400">יעד מחיר ממוצע</div>
+                            <div id="cw-analyst-pt" class="num text-xl font-bold text-white">$185.00</div>
+                            <div class="num text-[11px] text-emerald-400">+18.7% מהמחיר היום</div>
+                        </div>
+                        <div class="card p-4 space-y-1">
+                            <div class="text-xs text-zinc-400">יעדים שהתממשו</div>
+                            <div class="num text-xl font-bold text-white">64%</div>
+                            <div class="text-[11px] text-zinc-500">מהיעדים התקיימו תוך 12 חודשים</div>
+                        </div>
+                        <div class="card p-4 space-y-1">
+                            <div class="text-xs text-zinc-400">דוחות מול תחזית</div>
+                            <div class="num text-xl font-bold text-emerald-400">8/8</div>
+                            <div class="text-[11px] text-zinc-500">הדוחות האחרונים עקפו את התחזית</div>
+                        </div>
+                    </div>
+
+                    <div class="card p-5 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-white">האנליסטים המדויקים (שיעור הצלחה 80% ומעלה)</h3>
+                            <span class="text-xs text-zinc-500">סינון רעש — רק אנליסטים בעלי דיוק מוכח</span>
+                        </div>
+                        <div class="divide-y divide-[#1E1E22] text-xs">
+                            <div class="py-3 flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold text-white">Stacy Rasgon</div>
+                                    <div class="text-zinc-500">Bernstein Research</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-semibold">קנייה</span>
+                                    <span class="num font-bold text-white">$180.00</span>
+                                    <span class="num text-zinc-400">דיוק 92%</span>
+                                </div>
+                            </div>
+                            <div class="py-3 flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold text-white">Harlan Sur</div>
+                                    <div class="text-zinc-500">J.P. Morgan</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-semibold">קנייה</span>
+                                    <span class="num font-bold text-white">$175.00</span>
+                                    <span class="num text-zinc-400">דיוק 88%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: DECISION LOG (יומן החלטות) -->
+                <div id="cw-panel-journal" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    <div class="lg:col-span-5 card p-5 space-y-3.5 h-fit">
+                        <h3 class="text-sm font-bold text-white">תיעוד החלטה חדשה ביומן</h3>
+                        <select id="cw-log-action" class="pill-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+                            <option value="בחינת תזה — ללא שינוי בפוזיציה">בחינת תזה — ללא שינוי בפוזיציה (Hold)</option>
+                            <option value="הגדלת פוזיציה בעקבות אימות ראיות">הגדלת פוזיציה בעקבות אימות ראיות</option>
+                            <option value="צמצום משקל עודף (Rebalance)">צמצום משקל עודף (Rebalance)</option>
+                            <option value="סגירת פוזיציה — Kill-Switch הופר">סגירת פוזיציה — Kill-Switch הופר</option>
+                        </select>
+                        <textarea id="cw-log-note" rows="3" placeholder="כתוב את הרציונל להחלטה..." class="pill-input w-full rounded-xl p-3.5 text-xs"></textarea>
+                        <button onclick="addCompanyDecision()" class="w-full py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-bold transition-colors">
+                            שמור ביומן ההחלטות +
+                        </button>
+                    </div>
+                    <div id="cw-log-list" class="lg:col-span-7 space-y-3"></div>
+                </div>
+
+            </section>
+
+
+            <!-- =============================================================== -->
+            <!-- SCREEN 4: RESEARCH & THESIS BUILDER (מעבדת תזה וסורק)           -->
+            <!-- =============================================================== -->
+            <section id="view-lab" class="hidden space-y-6">
+                <div class="card p-5 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-lg font-bold text-white">מעבדת מחקר ובניית תזה חדשה</h1>
+                        <p class="text-xs text-zinc-400 mt-0.5">הגדרת תזת 7 הנקודות, תנאי Kill-Switch ובדיקה לאחור על 4 רבעונים לפני כניסה לפוזיציה</p>
+                    </div>
+                    <div class="inline-flex bg-[#0D0D0F] p-1 rounded-xl border border-[#222226] text-xs">
+                        <button onclick="loadLabPreset('SYM')" id="lab-btn-SYM" class="px-3 py-1 rounded-lg bg-[#222226] text-white font-num font-bold">SYM</button>
+                        <button onclick="loadLabPreset('UBER')" id="lab-btn-UBER" class="px-3 py-1 rounded-lg text-zinc-400 font-num font-bold">UBER</button>
+                        <button onclick="loadLabPreset('WIX')" id="lab-btn-WIX" class="px-3 py-1 rounded-lg text-zinc-400 font-num font-bold">WIX (20-F)</button>
+                    </div>
+                </div>
+
+                <div class="card p-6 space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs text-zinc-400 mb-1.5">סוג תזה</label>
+                            <select id="lab-type" class="pill-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+                                <option value="Mispricing">Mispricing — השוק טועה בתמחור</option>
+                                <option value="Quality Compounder">Quality Compounder — צמיחה איכותית</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-zinc-400 mb-1.5">תגית תמת-על (לזיהוי חשיפה נסתרת)</label>
+                            <input id="lab-theme" type="text" class="pill-input w-full rounded-xl px-3.5 py-2.5 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-zinc-400 mb-1.5">משקל יעד מתוכנן בתיק (%)</label>
+                            <input id="lab-weight" type="number" value="6" class="pill-input w-full rounded-xl px-3.5 py-2.5 num text-xs font-bold">
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-[#0D0D0F] border border-emerald-500/25 space-y-1.5">
+                        <label class="text-xs font-semibold text-emerald-400">1. ליבת התזה: למה השוק טועה (Variant Perception)</label>
+                        <textarea id="lab-p1" rows="2" class="pill-input w-full rounded-xl p-3 text-xs leading-relaxed"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-zinc-400 mb-1.5">2. מודל עסקי ומנועי צמיחה</label>
+                            <textarea id="lab-p2" rows="2" class="pill-input w-full rounded-xl p-3 text-xs"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-rose-400 mb-1.5">3. תרחיש נגד (Bear Case) ותנאי Kill-Switch</label>
+                            <textarea id="lab-p3" rows="2" class="pill-input w-full rounded-xl p-3 text-xs"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#1E1E22] space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-white">מדדי KPI קשיחים למעקב רבעוני</span>
+                            <button onclick="toggleLab4Q()" class="px-3 py-1.5 rounded-xl bg-[#1E1E24] hover:bg-[#27272E] text-xs text-zinc-200">
+                                🔍 הרץ בדיקה לאחור על 4 רבעונים
+                            </button>
+                        </div>
+                        <div id="lab-kpis-box" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+                        <div id="lab-4q-result" class="hidden p-4 rounded-xl bg-[#0D0D0F] border border-[#222226] text-xs text-zinc-300"></div>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button onclick="lockNewThesis()" class="px-5 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-bold transition-colors">
+                            נעל תזה והוסף למעקב 🔒
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+
+        <!-- 3. LEFT RAIL (Quick Action Cards + "בקרוב" Calendar + "חדשות" Feed — Exact Clone of Screenshots) -->
+        <aside class="hidden lg:flex w-72 border-r border-[#19191D] p-4 flex-col gap-5 shrink-0">
+            
+            <!-- Top Visual Quick Action Card (Matching the dark card on top-left of screenshots) -->
+            <div class="card p-4 space-y-3">
+                <div class="h-24 rounded-xl bg-gradient-to-br from-[#1A1A22] to-[#121216] border border-[#24242B] flex items-center justify-center">
+                    <div class="flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-xs">T</span>
+                        <div class="text-right">
+                            <div class="text-xs font-bold text-white">ניהול תזות פעיל</div>
+                            <div class="text-[10px] text-zinc-400">5 פוזיציות • 1 דורש החלטה</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="navigate('lab')" class="w-full p-3 rounded-xl bg-[#1A1A1F] hover:bg-[#222228] border border-[#26262C] flex items-center justify-between text-right transition-colors">
+                    <div>
+                        <div class="text-xs font-bold text-white">פתיחת תזה חדשה</div>
+                        <div class="text-[11px] text-zinc-500">הגדרת Variant ו-Kill-Switch</div>
+                    </div>
+                    <span class="w-7 h-7 rounded-lg bg-[#25252C] text-zinc-300 flex items-center justify-center text-sm">+</span>
+                </button>
+
+                <button onclick="navigate('portfolio')" class="w-full p-3 rounded-xl bg-[#1A1A1F] hover:bg-[#222228] border border-[#26262C] flex items-center justify-between text-right transition-colors">
+                    <div>
+                        <div class="text-xs font-bold text-white">הוספת פוזיציה לתיק</div>
+                        <div class="text-[11px] text-zinc-500">סנכרון IBKR או הזנה ידנית</div>
+                    </div>
+                    <span class="w-7 h-7 rounded-lg bg-[#25252C] text-zinc-300 flex items-center justify-center text-xs">▤</span>
+                </button>
+            </div>
+
+            <!-- "בקרוב" — Upcoming Earnings & Macro (Exact Clone of Screenshot 3a8f3b & 3a8b98) -->
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-bold text-white">בקרוב ›</span>
+                    <span class="text-[11px] text-zinc-500">72 שעות</span>
+                </div>
+                <div class="space-y-2">
+                    <div onclick="openCompany('NVDA')" class="card card-hover p-3 flex items-center justify-between cursor-pointer">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-full bg-emerald-500/15 text-emerald-400 font-num font-bold text-[10px] flex items-center justify-center">NV</span>
+                            <div>
+                                <div class="text-xs font-bold text-white">דוח רבעוני NVDA</div>
+                                <div class="text-[11px] text-zinc-500">מחר • אחרי הסגירה</div>
+                            </div>
+                        </div>
+                        <span class="num text-[11px] text-zinc-400">18.11</span>
+                    </div>
+
+                    <div class="card p-3 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-full bg-zinc-800 text-zinc-300 font-bold text-[10px] flex items-center justify-center">FED</span>
+                            <div>
+                                <div class="text-xs font-bold text-white">פרוטוקול ישיבת הפד</div>
+                                <div class="text-[11px] text-zinc-500">יום חמישי • 21:00</div>
+                            </div>
+                        </div>
+                        <span class="num text-[11px] text-zinc-400">19.11</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- "חדשות" — Filtered News Feed with Thesis Impact Pills (Exact Clone of Screenshot 3a8b98) -->
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-bold text-white">חדשות מסוננות ›</span>
+                </div>
+                <div class="space-y-2.5">
+                    <div onclick="openCompany('VRT')" class="card card-hover p-3.5 space-y-1.5 cursor-pointer">
+                        <p class="text-xs font-medium text-zinc-200 leading-snug">
+                            מיקרוסופט מאשרת הגדלת תקציב הקמת מרכזי נתונים מקוררי-נוזל ב-2027
+                        </p>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-emerald-400 font-semibold">מחזק תזה • VRT</span>
+                            <span class="text-zinc-500">לפני 3 שעות</span>
+                        </div>
+                    </div>
+
+                    <div onclick="openCompany('NVDA')" class="card card-hover p-3.5 space-y-1.5 cursor-pointer">
+                        <p class="text-xs font-medium text-zinc-200 leading-snug">
+                            NVDA מזהירה קונים מסיכון משפטי וריכוזיות לקוחות בדוח הרבעוני
+                        </p>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-rose-400 font-semibold">מאתגר תזה • NVDA</span>
+                            <span class="text-zinc-500">לפני 6 שעות</span>
+                        </div>
+                    </div>
+
+                    <div onclick="openCompany('UBER')" class="card card-hover p-3.5 space-y-1.5 cursor-pointer">
+                        <p class="text-xs font-medium text-zinc-200 leading-snug">
+                            הרובוטקסי של Zoox זמין כעת באפליקציית UBER בלאס וגאס
+                        </p>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-emerald-400 font-semibold">מחזק תזה • UBER</span>
+                            <span class="text-zinc-500">לפני 12 שעות</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+    <!-- AUDIT TRAIL MODAL -->
+    <div id="audit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+        <div class="card max-w-md w-full p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-[#222226]">
+                <div>
+                    <h3 class="text-base font-bold text-white">היסטוריית גרסאות התזה (Audit Trail)</h3>
+                    <p class="text-xs text-zinc-500">תנאי ה-KPI המקוריים נעולים למניעת שינוי בדיעבד</p>
+                </div>
+                <button onclick="closeAuditDrawer()" class="text-zinc-400 hover:text-white">✕</button>
+            </div>
+            <div id="audit-body" class="space-y-2.5 text-xs"></div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="fixed bottom-5 left-5 z-50 hidden bg-white text-black px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold"></div>
+
+    <!-- ======================================================================= -->
+    <!-- JAVASCRIPT DATA & INTERACTIVE ENGINE                                    -->
+    <!-- ======================================================================= -->
+    <script>
+        const DB = {
+            'NVDA': {
+                ticker: 'NVDA', short: 'NV', color: 'bg-emerald-500/20 text-emerald-400',
+                name: 'NVIDIA Corporation', sector: 'שבבים', theme: 'AI Datacenter', group: 'active',
+                price: '$155.83', prevClose: '$162.85', change: '-4.31%', up: false,
+                buyPrice: '$87.00', posValue: '$664,093', pnl: '+$293,310 (+79.1%)', pnlUp: true,
+                weight: 34, targetWeight: 30, nextReport: '18.11', filer: 'SEC 10-Q',
+                status: 'review', statusText: '⚠ 10-Q Redline (3/3)',
+                thesisType: 'Quality Compounder',
+                variant: 'השוק מתמקד במחזורי חומרה קצרי טווח, ומפספס שנעילת התוכנה של CUDA ו-NVLink הופכת את NVDA לתשתית הסטנדרטית של מחשוב AI ארגוני.',
+                killSwitch: 'הפרכה אם שולי הרווח הגולמי יורדים מתחת ל-72% למשך שני רבעונים או צמיחת Data Center מתחת ל-45%.',
+                kpis: [
+                    { name: 'Data Center Revenue YoY', tier: 'קריטי', actual: '112.0%', target: '> 45.0%', ok: true, q: ['✓', '✓', '✓', '✓'] },
+                    { name: 'GAAP Gross Margin', tier: 'קריטי', actual: '75.1%', target: '> 72.0%', ok: true, q: ['✓', '✓', '✓', '✓'] },
+                    { name: 'HBM3E Supply Visibility', tier: 'תומך', actual: 'נעול 2027', target: '12 חודשים', ok: true, q: ['✓', '✓', '✓', '✓'] }
+                ],
+                bears: [
+                    { title: 'מעבר לקוחות הענן לשבבי Custom ASIC', status: 'התראה ⚠', desc: '4 לקוחות מהווים 49% מההכנסות ומאיצים פיתוח שבבים פנימיים.' },
+                    { title: 'האטת הוצאות ההון של Hyperscalers', status: 'תקין ✓', desc: 'תחזיות CapEx ל-2027 של Microsoft ו-Meta עלו ב-14%.' }
+                ],
+                evidence: [
+                    {
+                        id: 'ev1', doc: 'SEC Form 10-Q • Item 1A (Risk Factors)', date: 'הבוקר • 07:30',
+                        quote: 'Four direct cloud service provider customers accounted for 49% of total revenue (up from 46%), and continue to invest in internal custom ASIC architectures.',
+                        ai: 'הנהלת החברה הרחיבה את אזהרת ריכוזיות הלקוחות מ-46% ל-49% והדגישה פיתוח שבבים מתחרים אצל הלקוחות.',
+                        impact: 'אינו מפר KPI כמותי, אך מחזק את תרחיש הנגד ומחייב בחינה של משקל היתר בתיק (34% מול יעד 30%).',
+                        verified: false
+                    }
+                ],
+                metrics: [
+                    { l: 'שווי שוק', v: '$3.81T' }, { l: 'מכפיל רווח', v: '46.2' }, { l: 'מכפיל עתידי', v: '32.4' },
+                    { l: 'PEG', v: '1.12' }, { l: 'מכפיל הענף', v: '38.5' }, { l: 'רווח גולמי', v: '75.1%' }, { l: 'מזומן נטו', v: '$26.4B' }
+                ],
+                moat: 9, moatDesc: 'נעילת מפתחים ב-CUDA (מעל 5.5 מיליון מפתחים) ותקשורת NVLink יוצרות עלות מעבר גבוהה במיוחד.',
+                about: 'אנבידיה מפתחת מעבדים גרפיים ותשתיות מחשוב מואץ למרכזי נתונים, בינה מלאכותית, רכב אוטונומי וגיימינג.',
+                sankey: { total: '$119.8B', segs: [{ n: 'Data Center', v: '$104.2B' }, { n: 'Gaming', v: '$10.8B' }, { n: 'Auto & Other', v: '$4.8B' }], gp: '$90.0B', cogs: '$29.8B', op: '$74.5B', net: '$63.2B' },
+                warnings: [
+                    { lvl: 'בינוני', t: 'ריכוזיות לקוחות גבוהה (49%)', d: 'כמעט מחצית מההכנסות תלויות בארבע חברות ענן אמריקאיות.' },
+                    { lvl: 'נמוך', t: 'מחזוריות היסטורית בשבבים', d: 'האטה בהשקעות הון של ספקיות הענן תפגע מידית בצבר ההזמנות.' }
+                ],
+                pts: [110, 118, 125, 122, 134, 145, 140, 152, 160, 166, 162.8, 155.8],
+                logs: [
+                    { date: '02.09.2026', act: 'צמצום משקל עודף (Trim)', price: '$138.20', note: 'הפוזיציה עלתה ל-38% מהתיק. מימשתי חלק קטן כדי להתקרב ליעד האישי (30%).' },
+                    { date: '15.01.2026', act: 'כניסה לפוזיציה (Buy)', price: '$87.00', note: 'כניסה על בסיס מונופול תוכנת CUDA והשקת Blackwell.' }
+                ],
+                audit: [
+                    { ver: 'v1.1', date: '02.09.2026', txt: 'עדכון משקל יעד מ-25% ל-30%. תנאי ה-KPI נותרו נעולים.' },
+                    { ver: 'v1.0 (Locked)', date: '15.01.2026', txt: 'נעילת תזה: Data Center YoY > 45%, Gross Margin > 72%.' }
+                ]
+            },
+            'AVGO': {
+                ticker: 'AVGO', short: 'AV', color: 'bg-indigo-500/20 text-indigo-400',
+                name: 'Broadcom Inc.', sector: 'שבבים', theme: 'AI Datacenter', group: 'active',
+                price: '$333.25', prevClose: '$347.02', change: '-3.97%', up: false,
+                buyPrice: '$326.90', posValue: '$449,240', pnl: '+$8,568 (+1.94%)', pnlUp: true,
+                weight: 23, targetWeight: 25, nextReport: '09.12', filer: 'SEC 10-Q',
+                status: 'ok', statusText: '✓ תקין (3/3 KPIs)',
+                thesisType: 'Mispricing',
+                variant: 'השוק מתמחר את AVGO כחברת שבבים מסורתית, ומחמיץ שמעבר ענקיות הענן לשבבי Custom AI ASICs יכפיל את הכנסות ה-AI לצד תזרים חוזר מ-VMware.',
+                killSwitch: 'הפרכה אם צמיחת הכנסות ה-AI יורדת מתחת ל-35% שנתי.',
+                kpis: [
+                    { name: 'AI Semiconductor YoY', tier: 'קריטי', actual: '48.2%', target: '> 35.0%', ok: true, q: ['✓', '✓', '✓', '✓'] },
+                    { name: 'Consolidated Gross Margin', tier: 'קריטי', actual: '76.4%', target: '> 74.0%', ok: true, q: ['✓', '✓', '✓', '✓'] },
+                    { name: 'Net Debt / EBITDA', tier: 'תומך', actual: '1.85x', target: '< 2.3x', ok: true, q: ['✓', '✓', '✓', '✓'] }
+                ],
+                bears: [{ title: 'נטישת לקוחות VMware', status: 'תקין ✓', desc: 'שיעור חידוש המנויים נותר מעל 91%.' }],
+                evidence: [
+                    {
+                        id: 'ev-av', doc: 'SEC Form 4 • Open Market Purchase', date: 'הבוקר • 07:30',
+                        quote: 'Director Harry You purchased 10,500 shares of common stock in the open market ($1.85M transaction value).',
+                        ai: 'רכישה יזומה מכסף אישי בשוק הפתוח לקראת פרסום דוחות Q4.',
+                        impact: 'מחזק את ביטחון ההנהלה בתחזית הכנסות ה-AI.',
+                        verified: true
+                    }
+                ],
+                metrics: [
+                    { l: 'שווי שוק', v: '$1.54T' }, { l: 'מכפיל רווח', v: '41.0' }, { l: 'מכפיל עתידי', v: '29.8' },
+                    { l: 'PEG', v: '1.35' }, { l: 'מכפיל הענף', v: '38.5' }, { l: 'רווח גולמי', v: '76.4%' }, { l: 'חוב נטו', v: '$58.2B' }
+                ],
+                moat: 8, moatDesc: 'שותפות עמוקה בתכנון שבבים ייעודיים לגוגל ומטא לצד נעילה ארגונית של VMware.',
+                about: 'ברודקום מפתחת פתרונות מוליכים למחצה ותשתיות תוכנה ארגוניות למרכזי נתונים ותקשורת.',
+                sankey: { total: '$51.6B', segs: [{ n: 'Semiconductors', v: '$30.1B' }, { n: 'VMware Software', v: '$21.5B' }], gp: '$39.4B', cogs: '$12.2B', op: '$28.1B', net: '$21.4B' },
+                warnings: [
+                    { lvl: 'בינוני', t: 'רווח מתואם מול רווח בדוחות', d: 'הפחתות נכסים בלתי מוחשיים מ-VMware יוצרות פער של 34% בין Non-GAAP ל-GAAP.' }
+                ],
+                pts: [280, 292, 305, 315, 310, 328, 336, 342, 351, 347, 333.2],
+                logs: [{ date: '10.06.2026', act: 'כניסה לפוזיציה (Buy)', price: '$326.90', note: 'כניסה על בסיס מנועי Custom ASICs.' }],
+                audit: [{ ver: 'v1.0 (Locked)', date: '10.06.2026', txt: 'נעילת תזה.' }]
+            },
+            'VRT': {
+                ticker: 'VRT', short: 'VR', color: 'bg-orange-500/20 text-orange-400',
+                name: 'Vertiv Holdings Co', sector: 'תשתיות AI', theme: 'AI Datacenter', group: 'active',
+                price: '$188.72', prevClose: '$202.05', change: '-6.60%', up: false,
+                buyPrice: '$202.00', posValue: '$332,046', pnl: '-$21,825 (-6.58%)', pnlUp: false,
+                weight: 17, targetWeight: 15, nextReport: '10.02', filer: 'SEC 10-Q',
+                status: 'ok', statusText: '✓ תקין (3/3 KPIs)',
+                thesisType: 'Mispricing',
+                variant: 'המעבר לשבבי AI בצפיפות הספק של 100kW+ מחייב מערכות קירור נוזלי וניהול חשמל שבהן ל-Vertiv יש יתרון שירות בלעדי.',
+                killSwitch: 'הפרכה אם יחס ההזמנות להכנסות (Book-to-Bill) יורד מתחת ל-1.0x.',
+                kpis: [
+                    { name: 'Book-to-Bill Ratio', tier: 'קריטי', actual: '1.24x', target: '> 1.05x', ok: true, q: ['✓', '✓', '✓', '✓'] },
+                    { name: 'Organic Orders Growth', tier: 'קריטי', actual: '+37%', target: '> 20%', ok: true, q: ['✓', '✓', '✓', '✓'] }
+                ],
+                bears: [], evidence: [],
+                metrics: [
+                    { l: 'שווי שוק', v: '$71.4B' }, { l: 'מכפיל רווח', v: '44.5' }, { l: 'מכפיל עתידי', v: '36.2' },
+                    { l: 'PEG', v: '1.28' }, { l: 'מכפיל הענף', v: '26.0' }, { l: 'רווח גולמי', v: '36.8%' }, { l: 'צבר הזמנות', v: '$7.4B' }
+                ],
+                moat: 8, moatDesc: 'מערך שירות והתקנה גלובלי שאין למתחרים בניהול תרמי של מרכזי נתונים.',
+                about: 'ורטיב מספקת תשתיות קריטיות של קירור נוזלי וניהול אנרגיה למרכזי נתונים.',
+                sankey: { total: '$8.2B', segs: [{ n: 'Critical Infrastructure', v: '$6.1B' }, { n: 'Services', v: '$2.1B' }], gp: '$3.0B', cogs: '$5.2B', op: '$1.5B', net: '$1.1B' },
+                warnings: [{ lvl: 'נמוך', t: 'תנודתיות יומית גבוהה', d: 'ירידה יומית של 6.6% ללא אירוע עסקי.' }],
+                pts: [155, 162, 170, 178, 185, 194, 190, 204, 202, 188.7],
+                logs: [{ date: '04.11.2026', act: 'כניסה לפוזיציה (Buy)', price: '$202.00', note: 'כניסה לתמת קירור מרכזי נתונים.' }],
+                audit: [{ ver: 'v1.0', date: '04.11.2026', txt: 'נעילת תזה.' }]
+            },
+            'NBIS': {
+                ticker: 'NBIS', short: 'NB', color: 'bg-rose-500/20 text-rose-400',
+                name: 'Nebius Group N.V.', sector: 'תשתיות AI', theme: 'AI Datacenter', group: 'active',
+                price: '$31.18', prevClose: '$34.04', change: '-8.40%', up: false,
+                buyPrice: '$28.50', posValue: '$214,853', pnl: '+$20,196 (+9.40%)', pnlUp: true,
+                weight: 11, targetWeight: 10, nextReport: '18.02', filer: 'SEC 20-F / 6-K',
+                status: 'broken', statusText: '✕ Kill-Switch (1/3)',
+                thesisType: 'Mispricing',
+                variant: 'השוק מתמחר את NBIS בדיסקאונט מול CoreWeave ומתעלם מקופת מזומנים נקייה של $2.15B ללא חוב.',
+                killSwitch: 'הפרכה מיידית אם קצב ההכנסות השנתי (Core AI ARR) יורד מתחת ל-$400M.',
+                kpis: [
+                    { name: 'Core AI ARR Run-Rate', tier: 'קריטי', actual: '$365M', target: '> $400M', ok: false, q: ['✓', '✓', '✓', '✕'] },
+                    { name: 'Net Cash Position', tier: 'קריטי', actual: '$2.15B', target: '> $1.5B', ok: true, q: ['✓', '✓', '✓', '✓'] }
+                ],
+                bears: [{ title: 'עיכובי חיבור חשמל באירופה', status: 'התממש ⚠', desc: 'דחיית חיבור 60MW בפינלנד הורידה את קצב ה-ARR מתחת לסף ההפרכה.' }],
+                evidence: [
+                    {
+                        id: 'ev-nb', doc: 'SEC Form 6-K • Q3 Financial Release', date: 'הבוקר • 07:30',
+                        quote: 'Core AI infrastructure annualized run-rate revenue (ARR) reached $365 million, reflecting a 6-week grid connection delay in Finland.',
+                        ai: 'קצב ההכנסות ($365M) נמוך ב-8.7% מסף ההפרכה ($400M) שהוגדר בעת פתיחת הפוזיציה.',
+                        impact: 'הפרת KPI קריטי — מעביר את התזה לסטטוס Broken ומחייב החלטה ביומן.',
+                        verified: false
+                    }
+                ],
+                metrics: [
+                    { l: 'שווי שוק', v: '$7.4B' }, { l: 'מזומן נטו', v: '$2.15B' }, { l: 'EV / ARR', v: '14.3x' },
+                    { l: 'חוב', v: '$0' }, { l: 'קיבולת', v: '300MW' }, { l: 'דיווח', v: '6-K זר' }, { l: 'סטטוס', v: 'Broken' }
+                ],
+                moat: 6, moatDesc: 'תשתיות אשכולות GPU באירופה וארה״ב עם מאזן נקי מחוב.',
+                about: 'נביוס בונה תשתיות ענן ובינה מלאכותית בקנה מידה גדול באירופה ובארה״ב.',
+                sankey: { total: '$445M', segs: [{ n: 'Nebius AI Cloud', v: '$365M' }, { n: 'Toloka & Avride', v: '$80M' }], gp: '$240M', cogs: '$205M', op: '-$45M', net: '-$32M' },
+                warnings: [{ lvl: 'גבוה', t: 'הפרת תנאי Kill-Switch', d: 'הכנסות ARR פספסו את יעד המינימום ($400M).' }],
+                pts: [26, 28.5, 32, 36, 39, 37, 35, 34, 31.1],
+                logs: [{ date: '14.08.2026', act: 'כניסה לפוזיציה (Buy)', price: '$28.50', note: 'כניסה על בסיס $2.15B מזומן נקי.' }],
+                audit: [{ ver: 'v1.0 (Locked)', date: '14.08.2026', txt: 'נעילת תזה: Core ARR > $400M.' }]
+            },
+            'TSM': {
+                ticker: 'TSM', short: 'TS', color: 'bg-cyan-500/20 text-cyan-400',
+                name: 'Taiwan Semiconductor', sector: 'שבבים', theme: 'AI Datacenter', group: 'active',
+                price: '$201.40', prevClose: '$205.09', change: '-1.80%', up: false,
+                buyPrice: '$154.00', posValue: '$292,985', pnl: '+$68,985 (+30.7%)', pnlUp: true,
+                weight: 15, targetWeight: 15, nextReport: '16.01', filer: 'SEC 20-F / 6-K',
+                status: 'ok', statusText: '✓ תקין (3/3 KPIs)',
+                thesisType: 'Quality Compounder',
+                variant: 'מונופול ייצור השבבים המתקדמים הנהנה מכל תרחיש תחרותי בין NVIDIA ל-Custom ASICs.',
+                killSwitch: 'הפרכה אם שולי הרווח הגולמי יורדים מתחת ל-53%.',
+                kpis: [
+                    { name: 'Gross Margin', tier: 'קריטי', actual: '57.8%', target: '> 53.0%', ok: true, q: ['✓', '✓', '✓', '✓'] },
+                    { name: 'Advanced Nodes (<7nm)', tier: 'קריטי', actual: '69%', target: '> 65%', ok: true, q: ['✓', '✓', '✓', '✓'] }
+                ],
+                bears: [], evidence: [],
+                metrics: [
+                    { l: 'שווי שוק', v: '$1.04T' }, { l: 'מכפיל רווח', v: '26.4' }, { l: 'מכפיל עתידי', v: '22.1' },
+                    { l: 'PEG', v: '0.95' }, { l: 'מכפיל הענף', v: '38.5' }, { l: 'רווח גולמי', v: '57.8%' }, { l: 'מזומן נטו', v: '$48.0B' }
+                ],
+                moat: 10, moatDesc: 'יתרון טכנולוגי והיקף השקעות הון שאין לו מתחרים בעולם.',
+                about: 'יצרנית השבבים הגדולה בעולם, המייצרת עבור אפל, אנבידיה, ברודקום ו-AMD.',
+                sankey: { total: '$95.1B', segs: [{ n: 'HPC & AI', v: '$49.5B' }, { n: 'Smartphones', v: '$31.4B' }, { n: 'IoT & Auto', v: '$14.2B' }], gp: '$55.0B', cogs: '$40.1B', op: '$43.2B', net: '$38.1B' },
+                warnings: [],
+                pts: [154, 165, 175, 185, 195, 205, 201.4],
+                logs: [{ date: '03.03.2026', act: 'כניסה לפוזיציה (Buy)', price: '$154.00', note: 'החזקת ליבה.' }],
+                audit: [{ ver: 'v1.0', date: '03.03.2026', txt: 'נעילת תזה.' }]
+            },
+            // HISTORY (CLOSED)
+            'AMAT': {
+                ticker: 'AMAT', short: 'AM', color: 'bg-sky-500/20 text-sky-400',
+                name: 'Applied Materials', sector: 'שבבים', theme: 'Semis Equipment', group: 'history',
+                price: '$351.41', prevClose: '$370.49', change: '-5.15%', up: false,
+                buyPrice: '$364.86', posValue: 'נסגרה', pnl: '-$3,054 (-3.69%)', pnlUp: false,
+                weight: 0, targetWeight: 0, nextReport: 'נסגרה 04.11', filer: 'SEC 10-Q',
+                status: 'broken', statusText: 'נסגרה • Kill-Switch',
+                thesisType: 'Mispricing', variant: 'האצת הזמנות ציוד ליתוגרפיה.', killSwitch: 'יציאה אם הכנסות סין יורדות מתחת ל-28%.',
+                kpis: [{ name: 'China Revenue Share', tier: 'קריטי', actual: '24%', target: '> 28%', ok: false, q: ['✓', '✓', '✕', '✕'] }],
+                bears: [], evidence: [], metrics: [{ l: 'שווי שוק', v: '$285B' }, { l: 'P/E', v: '22.4' }, { l: 'Fwd P/E', v: '19.8' }, { l: 'PEG', v: '1.4' }, { l: 'ענף', v: '32.0' }, { l: 'רווח גולמי', v: '47.5%' }, { l: 'מזומן', v: '$8.1B' }],
+                moat: 8, moatDesc: 'מובילה עולמית בציוד ייצור פרוסות סיליקון.', about: 'אפלייד מטיריאלס מספקת ציוד הנדסי לתעשיית השבבים.',
+                sankey: { total: '$27.1B', segs: [{ n: 'Semi Systems', v: '$19.8B' }, { n: 'Services', v: '$7.3B' }], gp: '$12.8B', cogs: '$14.3B', op: '$7.9B', net: '$6.8B' },
+                warnings: [], pts: [380, 365, 355, 351.4],
+                logs: [{ date: '04.11.2026', act: 'סגירת פוזיציה (Sell)', price: '$351.41', note: 'יציאה ממושמעת לאחר חציית סף הכנסות סין.' }],
+                audit: [{ ver: 'v1.0', date: '10.02.2026', txt: 'נעילת תזה.' }]
+            },
+            // WATCHLIST (SYM, UBER, WIX)
+            'SYM': {
+                ticker: 'SYM', short: 'SY', color: 'bg-lime-500/20 text-lime-400',
+                name: 'Symbotic Inc.', sector: 'אוטומציה', theme: 'Warehouse AI', group: 'watchlist',
+                price: '$34.29', prevClose: '$33.81', change: '+1.42%', up: true,
+                buyPrice: 'יעד: $30.00', posValue: 'רשימת מעקב', pnl: 'מרחק מיעד: 14%', pnlUp: true,
+                weight: 0, targetWeight: 6, nextReport: '24.11', filer: 'SEC 10-Q',
+                status: 'review', statusText: 'מחקר פעיל • 1/2 KPIs',
+                thesisType: 'Mispricing',
+                variant: 'צבר הזמנות מחייב של $22.4B ושיפור חד במרווח הגולמי של מערכות הדור החדש.',
+                killSwitch: 'הפרכה אם שולי רווח גולמי נשארים מתחת ל-18%.',
+                kpis: [
+                    { name: 'Contracted Backlog', tier: 'קריטי', actual: '$22.4B', target: '> $21.0B', ok: true, q: ['✓', '✓', '✓', '✓'] },
+                    { name: 'System Gross Margin', tier: 'קריטי', actual: '16.8%', target: '> 18.0%', ok: false, q: ['✕', '✕', '✓', '✕'] }
+                ],
+                bears: [{ title: 'תלות של 85% בהכנסות מ-Walmart', status: 'התראה ⚠', desc: 'ריכוזיות לקוח גבוהה מאוד.' }],
+                evidence: [],
+                metrics: [{ l: 'שווי שוק', v: '$19.8B' }, { l: 'EV/Sales', v: '9.4x' }, { l: 'צבר', v: '$22.4B' }, { l: 'רווח גולמי', v: '16.8%' }, { l: 'מזומן', v: '$870M' }, { l: 'חוב', v: '$0' }, { l: 'יעד אנליסטים', v: '$56.60' }],
+                moat: 7, moatDesc: 'פטנטים באוטומציה של מרכזים לוגיסטיים.', about: 'סימבוטיק מפתחת רובוטיקה מבוססת AI למחסנים ומרכזי הפצה.',
+                sankey: { total: '$1.81B', segs: [{ n: 'Systems', v: '$1.65B' }, { n: 'Software', v: '$0.16B' }], gp: '$0.30B', cogs: '$1.51B', op: '-$0.12B', net: '-$0.09B' },
+                warnings: [{ lvl: 'גבוה', t: 'ריכוזיות לקוח יחיד (Walmart)', d: 'מעל 85% מההכנסות מגיעות מלקוח אחד.' }],
+                pts: [38, 35, 32, 31, 33, 34.2], logs: [], audit: []
+            },
+            'UBER': {
+                ticker: 'UBER', short: 'UB', color: 'bg-zinc-700 text-white',
+                name: 'Uber Technologies, Inc.', sector: 'טכנולוגיה ותחבורה', theme: 'Autonomous & Mobility', group: 'watchlist',
+                price: '$69.99', prevClose: '$69.69', change: '+0.43%', up: true,
+                buyPrice: 'יעד: $65.00', posValue: 'רשימת מעקב', pnl: 'מרחק מיעד: 7.6%', pnlUp: true,
+                weight: 0, targetWeight: 10, nextReport: '05.02', filer: 'SEC 10-Q',
+                status: 'ok', statusText: 'מוכן לכניסה • 2/2 KPIs',
+                thesisType: 'Quality Compounder',
+                variant: 'השוק חושש שאיומי הרובוטקסי יחסלו את Uber, ומפספס שהיא צוואר הבקבוק של הביקוש שבלעדיו ציי רכב אוטונומיים לא יגיעו לניצולת.',
+                killSwitch: 'הפרכה אם צמיחת Gross Bookings יורדת מתחת ל-14%.',
+                kpis: [
+                    { name: 'Gross Bookings YoY', tier: 'קריטי', actual: '+18.5%', target: '> 14%', ok: true, q: ['✓', '✓', '✓', '✓'] },
+                    { name: 'Free Cash Flow (TTM)', tier: 'קריטי', actual: '$6.9B', target: '> $6.0B', ok: true, q: ['✓', '✓', '✓', '✓'] }
+                ],
+                bears: [], evidence: [],
+                metrics: [
+                    { l: 'שווי שוק', v: '$142.9B' }, { l: 'מכפיל רווח', v: '41.2' }, { l: 'מכפיל עתידי', v: '16.0' },
+                    { l: 'PEG', v: '1.55' }, { l: 'מכפיל הענף', v: '40.4' }, { l: 'רווח גולמי', v: '39.8%' }, { l: 'תזרים FCF', v: '$6.9B' }
+                ],
+                moat: 9, moatDesc: 'אפקט רשת דו-צדדי חזק בשילוב נסיעות, משלוחים ופרסום.',
+                about: 'אובר מפעילה פלטפורמה גלובלית להזמנת נסיעות, משלוחי מזון ולוגיסטיקה.',
+                sankey: { total: '$52.0B', segs: [{ n: 'Mobility', v: '$29.7B' }, { n: 'Delivery', v: '$17.2B' }, { n: 'Freight', v: '$5.1B' }], gp: '$20.7B', cogs: '$31.3B', op: '$5.6B', net: '$10.1B' },
+                warnings: [
+                    { lvl: 'בינוני', t: 'רווח מתואם מול רווח בדוחות', d: 'שערוך השקעות הון משפיע על שורת הרווח הנקי החשבונאי.' },
+                    { lvl: 'נמוך', t: 'תחרות רובוטקסי', d: 'השקת שירותים עצמאיים של Waymo ו-Tesla.' }
+                ],
+                pts: [66, 68, 71, 74, 70, 69.6, 69.9], logs: [], audit: []
+            },
+            'WIX': {
+                ticker: 'WIX', short: 'WX', color: 'bg-blue-500/20 text-blue-400',
+                name: 'Wix.com Ltd.', sector: 'תוכנה', theme: 'SMB Commerce', group: 'watchlist',
+                price: '$178.40', prevClose: '$176.42', change: '+1.12%', up: true,
+                buyPrice: 'יעד: $165.00', posValue: 'רשימת מעקב', pnl: 'דיווח 20-F זר', pnlUp: true,
+                weight: 0, targetWeight: 7, nextReport: '19.02', filer: 'SEC 20-F / 6-K',
+                status: 'ok', statusText: 'מחקר • 2/2 KPIs',
+                thesisType: 'Mispricing',
+                variant: 'המעבר לסוכנויות (Wix Studio) ופתרונות סליקה מעלה את שולי התזרים החופשי ל-26%.',
+                killSwitch: 'הפרכה אם צמיחת Partners יורדת מתחת ל-20%.',
+                kpis: [{ name: 'FCF Margin (6-K)', tier: 'קריטי', actual: '26.1%', target: '> 24%', ok: true, q: ['✓', '✓', '✓', '✓'] }],
+                bears: [], evidence: [],
+                metrics: [{ l: 'שווי שוק', v: '$9.8B' }, { l: 'P/FCF', v: '22.5' }, { l: 'FCF Margin', v: '26.1%' }, { l: 'רווח גולמי', v: '68.4%' }, { l: 'מזומן', v: '$1.1B' }, { l: 'דיווח', v: '20-F זר' }, { l: 'סטטוס', v: 'מעקב' }],
+                moat: 8, moatDesc: 'עלויות מעבר גבוהות לעסקים קטנים וסוכנויות דיגיטל.', about: 'וויקס מפתחת פלטפורמה לבניית אתרים וניהול עסקים באינטרנט.',
+                sankey: { total: '$1.77B', segs: [{ n: 'Subscriptions', v: '$1.28B' }, { n: 'Business Solutions', v: '$0.49B' }], gp: '$1.21B', cogs: '$0.56B', op: '$0.28B', net: '$0.22B' },
+                warnings: [{ lvl: 'בינוני', t: 'חברה זרה (20-F / 6-K)', d: 'ללא דוחות 10-Q מלאים או דיווחי Form 4.' }],
+                pts: [155, 162, 170, 176, 178.4], logs: [], audit: []
+            }
+        };
+
+        let currentView = 'home';
+        let currentTicker = 'NVDA';
+        let portfolioSub = 'active';
+        let portfolioViewMode = 'table';
+
+        // RENDER RIGHT RAIL WATCHLIST
+        function renderRightRail() {
+            const items = Object.values(DB).filter(s => s.group === 'active' || s.group === 'watchlist');
+            document.getElementById('rail-watchlist').innerHTML = items.map(s => {
+                const dot = s.status === 'broken' ? 'bg-rose-500' : (s.status === 'review' ? 'bg-amber-400' : 'bg-emerald-400');
+                return `
+                    <button onclick="openCompany('${s.ticker}')" class="w-full px-2.5 py-2 rounded-xl hover:bg-[#141417] flex items-center justify-between text-xs transition-colors">
+                        <span class="flex items-center gap-2.5">
+                            <span class="w-6 h-6 rounded-full ${s.color} font-num font-bold text-[10px] flex items-center justify-center relative">
+                                ${s.short}
+                                <span class="w-1.5 h-1.5 rounded-full ${dot} absolute -bottom-0.5 -left-0.5 ring-2 ring-[#0D0D0F]"></span>
+                            </span>
+                            <span class="num font-semibold text-zinc-200">${s.ticker}</span>
+                        </span>
+                        <span class="num text-[11px] ${s.up ? 'text-emerald-400' : 'text-rose-400'}">${s.change}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // SEARCH BAR
+        function showSearchMenu() {
+            renderSearchMenu(document.getElementById('search-input').value);
+            document.getElementById('search-menu').classList.remove('hidden');
+        }
+        function renderSearchMenu(q) {
+            const term = q.trim().toLowerCase();
+            const matches = Object.values(DB).filter(s => s.ticker.toLowerCase().includes(term) || s.name.toLowerCase().includes(term) || s.sector.includes(term));
+            document.getElementById('search-menu-items').innerHTML = matches.map(s => `
+                <button onclick="document.getElementById('search-menu').classList.add('hidden'); document.getElementById('search-input').value=''; openCompany('${s.ticker}')" class="w-full px-4 py-2.5 hover:bg-[#1A1A1F] flex items-center justify-between text-right transition-colors">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-7 h-7 rounded-full ${s.color} font-num font-bold text-[10px] flex items-center justify-center">${s.short}</span>
+                        <div>
+                            <div class="text-xs font-bold text-white"><span class="num">${s.ticker}</span> • ${s.name}</div>
+                            <div class="text-[11px] text-zinc-500">${s.sector} • ${s.theme}</div>
+                        </div>
+                    </div>
+                    <div class="text-left">
+                        <div class="num text-xs font-bold text-white">${s.price}</div>
+                        <div class="text-[10px] text-zinc-400">${s.statusText}</div>
+                    </div>
+                </button>
+            `).join('');
+        }
+        document.addEventListener('click', e => {
+            if (!e.target.closest('#search-input') && !e.target.closest('#search-menu')) {
+                document.getElementById('search-menu').classList.add('hidden');
+            }
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                document.getElementById('search-input').focus();
+            }
+            if (e.key === 'Escape') document.getElementById('search-menu').classList.add('hidden');
+        });
+
+        // NAVIGATION
+        function navigate(view) {
+            currentView = view;
+            ['home', 'portfolio', 'workspace', 'lab'].forEach(v => {
+                document.getElementById('view-' + v).classList.add('hidden');
+                document.getElementById('nav-' + v).classList.toggle('active', v === view);
+            });
+            document.getElementById('view-' + view).classList.remove('hidden');
+            if (view === 'portfolio') renderPortfolioTable();
+            if (view === 'workspace') renderCompany(currentTicker);
+            if (view === 'lab') loadLabPreset('SYM');
+            document.getElementById('right-rail').classList.add('translate-x-full');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function toggleRightDrawer() {
+            document.getElementById('right-rail').classList.toggle('translate-x-full');
+        }
+
+        // HOME SCREEN TABS & SPARKLINES
+        function setHomeTab(tab) {
+            document.getElementById('htab-briefing').className = tab === 'briefing' ? 'px-3.5 py-1.5 rounded-lg bg-[#222226] text-white font-semibold' : 'px-3.5 py-1.5 rounded-lg text-zinc-400 hover:text-white';
+            document.getElementById('htab-movers').className = tab === 'movers' ? 'px-3.5 py-1.5 rounded-lg bg-[#222226] text-white font-semibold' : 'px-3.5 py-1.5 rounded-lg text-zinc-400 hover:text-white';
+            document.getElementById('home-panel-briefing').classList.toggle('hidden', tab !== 'briefing');
+            document.getElementById('home-panel-movers').classList.toggle('hidden', tab !== 'movers');
+
+            if (tab === 'movers') {
+                const movers = Object.values(DB).filter(s => s.group === 'active');
+                document.getElementById('home-panel-movers').innerHTML = movers.map(s => {
+                    const min = Math.min(...s.pts), max = Math.max(...s.pts);
+                    const poly = s.pts.map((v, i) => `${(i / (s.pts.length - 1)) * 120},${34 - ((v - min) / (max - min || 1)) * 28}`).join(' ');
+                    const stroke = s.up ? '#22C55E' : '#EF4444';
+                    return `
+                        <div onclick="openCompany('${s.ticker}')" class="card card-hover p-4 cursor-pointer space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="text-right">
+                                    <div class="num text-xs font-bold text-white">${s.ticker}</div>
+                                    <div class="text-[11px] text-zinc-500 truncate max-w-[90px]">${s.name}</div>
+                                </div>
+                                <span class="w-7 h-7 rounded-full ${s.color} font-num font-bold text-[10px] flex items-center justify-center">${s.short}</span>
+                            </div>
+                            <svg viewBox="0 0 120 38" class="w-full h-9 overflow-visible">
+                                <polyline fill="none" stroke="${stroke}" stroke-width="1.8" points="${poly}" />
+                            </svg>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="num font-bold text-white">${s.price}</span>
+                                <span class="num font-semibold ${s.up ? 'text-emerald-400' : 'text-rose-400'}">${s.change}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // PORTFOLIO SCREEN
+        function setPortfolioSubTab(sub) {
+            portfolioSub = sub;
+            ['active', 'history', 'watchlist'].forEach(t => document.getElementById('ptab-' + t).classList.toggle('active', t === sub));
+            renderPortfolioTable();
+        }
+        function setPortfolioViewMode(mode) {
+            portfolioViewMode = mode;
+            document.getElementById('pview-table').classList.toggle('active', mode === 'table');
+            document.getElementById('pview-heatmap').classList.toggle('active', mode === 'heatmap');
+            document.getElementById('portfolio-table-wrap').classList.toggle('hidden', mode !== 'table');
+            document.getElementById('portfolio-heatmap-wrap').classList.toggle('hidden', mode !== 'heatmap');
+        }
+        function renderPortfolioTable() {
+            const q = document.getElementById('portfolio-filter-input').value.trim().toLowerCase();
+            const themeFilter = document.getElementById('portfolio-theme-filter').value;
+            const rows = Object.values(DB).filter(s =>
+                s.group === portfolioSub &&
+                (s.ticker.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)) &&
+                (themeFilter === 'ALL' || s.theme === themeFilter || s.sector === themeFilter)
+            );
+
+            document.getElementById('portfolio-tbody').innerHTML = rows.map(s => {
+                const badge = s.status === 'broken'
+                    ? 'bg-rose-500/15 text-rose-400'
+                    : (s.status === 'review' ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400');
+                return `
+                    <tr onclick="openCompany('${s.ticker}')" class="hover:bg-[#1A1A1F] cursor-pointer transition-colors">
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-7 h-7 rounded-full ${s.color} font-num font-bold text-[10px] flex items-center justify-center shrink-0">${s.short}</span>
+                                <div>
+                                    <div class="num font-bold text-white">${s.ticker}</div>
+                                    <div class="text-[11px] text-zinc-500">${s.name}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="text-xs text-zinc-200">${s.sector}</div>
+                            <div class="text-[11px] text-indigo-400">${s.theme}</div>
+                        </td>
+                        <td class="py-3.5 px-4 num font-semibold ${s.pnlUp ? 'text-emerald-400' : 'text-rose-400'}">${s.pnl}</td>
+                        <td class="py-3.5 px-4 num font-semibold ${s.up ? 'text-emerald-400' : 'text-rose-400'}">${s.change}</td>
+                        <td class="py-3.5 px-4 num font-bold text-white">${s.price}</td>
+                        <td class="py-3.5 px-4 num text-zinc-400">${s.buyPrice}</td>
+                        <td class="py-3.5 px-4 num font-semibold text-white">${s.posValue}</td>
+                        <td class="py-3.5 px-4" onclick="event.stopPropagation()">
+                            ${portfolioSub === 'active' ? `
+                                <div class="flex items-center gap-1.5 text-xs">
+                                    <span class="num font-bold text-white">${s.weight}%</span>
+                                    <span class="text-zinc-500">/ יעד</span>
+                                    <input type="number" value="${s.targetWeight}" onchange="DB['${s.ticker}'].targetWeight=this.value; toast('עודכן משקל יעד ל-${s.ticker}')" class="pill-input w-12 px-1.5 py-0.5 rounded num text-center text-xs">
+                                </div>
+                            ` : `<span class="num text-xs text-zinc-400">יעד: ${s.targetWeight}%</span>`}
+                        </td>
+                        <td class="py-3.5 px-4 num text-xs text-zinc-400">${s.nextReport}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 rounded-lg text-[11px] font-semibold ${badge}">${s.statusText}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Treemap Heatmap (Exact Screenshot 3a8e88 style)
+            const active = Object.values(DB).filter(s => s.group === 'active');
+            document.getElementById('portfolio-treemap').innerHTML = active.map(s => {
+                const span = s.weight >= 30 ? 'md:col-span-5' : (s.weight >= 20 ? 'md:col-span-4' : 'md:col-span-3');
+                const tileBg = s.up ? 'bg-emerald-950/55 border-emerald-500/30' : 'bg-rose-950/55 border-rose-500/30';
+                return `
+                    <div onclick="openCompany('${s.ticker}')" class="${span} rounded-2xl p-5 border ${tileBg} hover:brightness-125 cursor-pointer transition-all flex flex-col justify-between min-h-[140px]">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-zinc-400">${s.sector} • ${s.theme}</span>
+                            <span class="num text-xs font-bold text-zinc-300">${s.weight}%</span>
+                        </div>
+                        <div class="my-3 text-center">
+                            <div class="num text-xl font-bold text-white">${s.ticker}</div>
+                            <div class="num text-xs font-semibold ${s.up ? 'text-emerald-400' : 'text-rose-400'} mt-0.5">${s.change}</div>
+                        </div>
+                        <div class="text-center text-[11px] text-zinc-300">${s.statusText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // COMPANY WORKSPACE
+        function openCompany(ticker, tab = 'thesis') {
+            currentTicker = ticker;
+            document.getElementById('rail-active-ticker').textContent = ticker;
+            navigate('workspace');
+            setCompanyTab(tab);
+        }
+        function setCompanyTab(tab) {
+            ['thesis', 'financials', 'analysts', 'journal'].forEach(t => {
+                document.getElementById('cw-panel-' + t).classList.toggle('hidden', t !== tab);
+                document.getElementById('cwtab-' + t).classList.toggle('active', t === tab);
+            });
+        }
+        function renderCompany(ticker) {
+            const s = DB[ticker];
+            document.getElementById('cw-logo').textContent = s.short;
+            document.getElementById('cw-logo').className = `w-11 h-11 rounded-full ${s.color} font-num font-bold text-sm flex items-center justify-center`;
+            document.getElementById('cw-name').textContent = s.name;
+            document.getElementById('cw-ticker').textContent = s.ticker;
+            document.getElementById('cw-filer-badge').textContent = s.filer;
+            document.getElementById('cw-sector-pill').textContent = s.sector;
+            document.getElementById('cw-theme-pill').textContent = s.theme;
+            document.getElementById('cw-price').textContent = s.price;
+            document.getElementById('cw-prev-close').textContent = s.prevClose;
+            document.getElementById('cw-change').textContent = `${s.change} היום`;
+            document.getElementById('cw-change').className = `num text-xs font-semibold ${s.up ? 'text-emerald-400' : 'text-rose-400'}`;
+
+            const badge = document.getElementById('cw-thesis-status-badge');
+            badge.textContent = s.statusText;
+            badge.className = s.status === 'broken'
+                ? 'text-[11px] px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-400 font-semibold'
+                : (s.status === 'review'
+                    ? 'text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-semibold'
+                    : 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold');
+
+            // SVG Price Chart
+            const min = Math.min(...s.pts) * 0.96, max = Math.max(...s.pts) * 1.03;
+            const poly = s.pts.map((v, i) => `${(i / (s.pts.length - 1)) * 800},${150 - ((v - min) / (max - min || 1)) * 130}`).join(' ');
+            const stroke = s.up ? '#22C55E' : '#EF4444';
+            document.getElementById('cw-price-svg').innerHTML = `
+                <svg viewBox="0 0 800 160" class="w-full h-full overflow-visible">
+                    <line x1="0" y1="35" x2="800" y2="35" stroke="#27272A" stroke-width="1" stroke-dasharray="4 4"/>
+                    <polyline fill="none" stroke="${stroke}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="${poly}"/>
+                </svg>
+            `;
+
+            // Horizontal Metric Pills (Exact Screenshot 3a8b98)
+            document.getElementById('cw-metrics-row').innerHTML = s.metrics.map(m => `
+                <div class="card px-3.5 py-3 text-left">
+                    <div class="num text-base font-bold text-white">${m.v}</div>
+                    <div class="text-[11px] text-zinc-500 mt-0.5 text-right">${m.l}</div>
+                </div>
+            `).join('');
+
+            // Thesis Tab
+            document.getElementById('cw-thesis-type').textContent = s.thesisType;
+            document.getElementById('cw-variant').textContent = s.variant;
+            document.getElementById('cw-killswitch').textContent = s.killSwitch;
+
+            document.getElementById('cw-kpis-list').innerHTML = s.kpis.map(k => `
+                <div class="p-3.5 rounded-xl bg-[#0D0D0F] border ${k.ok ? 'border-[#1E1E22]' : 'border-rose-500/35'} flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="num text-xs font-bold text-white">${k.name}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-[#1A1A1F] text-zinc-400">${k.tier}</span>
+                        </div>
+                        <div class="text-xs text-zinc-400 mt-1">
+                            בפועל: <strong class="num ${k.ok ? 'text-emerald-400' : 'text-rose-400'}">${k.actual}</strong> • יעד: <span class="num text-zinc-200">${k.target}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        ${k.q.map((mark, i) => `
+                            <div class="px-2 py-1 rounded-lg bg-[#141417] border border-[#222226] text-center">
+                                <div class="num text-[9px] text-zinc-500">Q${i + 1}</div>
+                                <div class="text-xs font-bold ${mark === '✓' ? 'text-emerald-400' : 'text-rose-400'}">${mark}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('cw-bear-list').innerHTML = (s.bears.length ? s.bears : [{ title: 'אין התראות נגד פתוחות', status: 'תקין ✓', desc: 'המערכת סורקת ברקע שינויים בסעיפי הסיכון בדוחות.' }]).map(b => `
+                <div class="p-3.5 rounded-xl bg-[#0D0D0F] border border-[#1E1E22] space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-white">${b.title}</span>
+                        <span class="${b.status.includes('⚠') ? 'text-amber-400' : 'text-emerald-400'} font-semibold">${b.status}</span>
+                    </div>
+                    <p class="text-xs text-zinc-400 leading-relaxed">${b.desc}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('cw-evidence-list').innerHTML = (s.evidence.length ? s.evidence : [{
+                id: 'clean', doc: 'SEC EDGAR Monitor', date: 'הבוקר',
+                quote: 'No material Risk Factor redlines or KPI deviations detected in latest filing.',
+                ai: 'החברה ממשיכה לפעול בהתאם להנחות התזה הנעולות.',
+                impact: 'אין שינוי בתזה.', verified: true
+            }]).map(ev => `
+                <div class="p-4 rounded-xl bg-[#0D0D0F] border border-[#1E1E22] space-y-3">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-white">${ev.doc} <span class="text-zinc-500 font-normal">• ${ev.date}</span></span>
+                        ${ev.verified ? '<span class="text-emerald-400 text-[11px]">✓ אומת</span>' : `<button onclick="ev.verified=true; renderCompany('${s.ticker}'); toast('הראיה אומתה')" class="px-2.5 py-1 rounded-lg bg-white text-black text-[11px] font-bold">אשר רלוונטיות ✓</button>`}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                        <div class="p-3 rounded-xl bg-[#141417] border border-[#222226] space-y-1">
+                            <div class="text-zinc-500 font-semibold">1. עובדת מקור (SEC Quote)</div>
+                            <blockquote dir="ltr" class="num text-[11px] text-zinc-300 text-left leading-relaxed">"${ev.quote}"</blockquote>
+                        </div>
+                        <div class="p-3 rounded-xl bg-[#141417] border border-[#222226] space-y-1">
+                            <div class="text-indigo-400 font-semibold">2. פרשנות AI</div>
+                            <p class="text-zinc-300 leading-relaxed">${ev.ai}</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-[#141417] border border-[#222226] space-y-1">
+                            <div class="text-amber-400 font-semibold">3. השפעה על התזה</div>
+                            <p class="text-white font-medium leading-relaxed">${ev.impact}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Financials & Sankey Tab (Exact Screenshot 3a8b5e & 3a8aa9)
+            document.getElementById('cw-moat-score').textContent = `${s.moat}/10`;
+            document.getElementById('cw-moat-bars').innerHTML = Array.from({ length: 10 }, (_, i) =>
+                `<div class="h-2 rounded-full ${i < s.moat ? 'bg-emerald-400' : 'bg-[#222226]'}"></div>`
+            ).join('');
+            document.getElementById('cw-moat-desc').textContent = s.moatDesc;
+            document.getElementById('cw-about').textContent = s.about;
+
+            // SVG Sankey Diagram
+            const sk = s.sankey;
+            document.getElementById('cw-sankey-wrap').innerHTML = `
+                <svg viewBox="0 0 760 220" class="w-full min-w-[620px] h-52">
+                    <!-- Curved Flows -->
+                    <path d="M165,45 C235,45 235,105 305,105" fill="none" stroke="#3B82F6" stroke-width="14" stroke-opacity="0.35"/>
+                    <path d="M165,110 C235,110 235,110 305,110" fill="none" stroke="#10B981" stroke-width="10" stroke-opacity="0.35"/>
+                    <path d="M165,175 C235,175 235,115 305,115" fill="none" stroke="#F59E0B" stroke-width="6" stroke-opacity="0.35"/>
+                    <path d="M445,100 C510,100 510,65 575,65" fill="none" stroke="#22C55E" stroke-width="16" stroke-opacity="0.4"/>
+                    <path d="M445,120 C510,120 510,165 575,165" fill="none" stroke="#EF4444" stroke-width="12" stroke-opacity="0.35"/>
+
+                    <!-- Left Nodes: Segments -->
+                    ${sk.segs.map((seg, idx) => `
+                        <g transform="translate(15, ${20 + idx * 65})">
+                            <rect width="150" height="48" rx="10" fill="#0D0D0F" stroke="#27272A"/>
+                            <text x="138" y="20" text-anchor="end" fill="#E4E4E7" font-size="11" font-weight="600">${seg.n}</text>
+                            <text x="138" y="37" text-anchor="end" fill="#38BDF8" font-size="11" font-family="Inter">${seg.v}</text>
+                        </g>
+                    `).join('')}
+
+                    <!-- Center Node: Total Revenue -->
+                    <g transform="translate(305, 80)">
+                        <rect width="140" height="58" rx="12" fill="#0D0D0F" stroke="#3F3F46"/>
+                        <text x="128" y="24" text-anchor="end" fill="#A1A1AA" font-size="11">הכנסות</text>
+                        <text x="128" y="44" text-anchor="end" fill="#FFFFFF" font-size="13" font-weight="700" font-family="Inter">${sk.total}</text>
+                    </g>
+
+                    <!-- Right Nodes: Gross Profit & COGS -->
+                    <g transform="translate(575, 35)">
+                        <rect width="165" height="54" rx="12" fill="#0D0D0F" stroke="#22C55E" stroke-opacity="0.4"/>
+                        <text x="152" y="22" text-anchor="end" fill="#E4E4E7" font-size="11">רווח גולמי / נקי</text>
+                        <text x="152" y="41" text-anchor="end" fill="#22C55E" font-size="12" font-weight="700" font-family="Inter">${sk.gp} / ${sk.net}</text>
+                    </g>
+                    <g transform="translate(575, 135)">
+                        <rect width="165" height="54" rx="12" fill="#0D0D0F" stroke="#EF4444" stroke-opacity="0.4"/>
+                        <text x="152" y="22" text-anchor="end" fill="#E4E4E7" font-size="11">עלות המכר ותפעול</text>
+                        <text x="152" y="41" text-anchor="end" fill="#EF4444" font-size="12" font-weight="700" font-family="Inter">${sk.cogs}</text>
+                    </g>
+                </svg>
+            `;
+
+            document.getElementById('cw-warnings-grid').innerHTML = (s.warnings.length ? s.warnings : [{ lvl: 'תקין', t: 'ללא סימני אזהרה', d: 'איכות הרווח ותזרים המזומנים תואמים לדיווח.' }]).map(w => `
+                <div class="card p-4 space-y-1.5">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${w.lvl === 'גבוה' ? 'bg-rose-500/15 text-rose-400' : (w.lvl === 'בינוני' ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400')}">${w.lvl}</span>
+                    <div class="text-xs font-bold text-white">${w.t}</div>
+                    <p class="text-[11px] text-zinc-400 leading-relaxed">${w.d}</p>
+                </div>
+            `).join('');
+
+            // Decision Log Tab
+            document.getElementById('cw-log-count').textContent = s.logs.length;
+            document.getElementById('cw-log-list').innerHTML = (s.logs.length ? s.logs : [{ date: 'היום', act: 'אין החלטות מתועדות', price: '-', note: 'תעד החלטה ראשונה מימין.' }]).map(l => `
+                <div class="card p-4 space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-white">${l.act}</span>
+                        <span class="num text-[11px] text-zinc-500">${l.date} • ${l.price}</span>
+                    </div>
+                    <p class="text-xs text-zinc-400 leading-relaxed">${l.note}</p>
+                </div>
+            `).join('');
+        }
+
+        function addCompanyDecision() {
+            const act = document.getElementById('cw-log-action').value;
+            const note = document.getElementById('cw-log-note').value.trim();
+            if (!note) return toast('נא להזין נימוק להחלטה');
+            const s = DB[currentTicker];
+            s.logs.unshift({ date: '17.11.2026', act, price: s.price, note });
+            document.getElementById('cw-log-note').value = '';
+            renderCompany(currentTicker);
+            toast('ההחלטה נשמרה ביומן');
+        }
+
+        function openAuditDrawer() {
+            const s = DB[currentTicker];
+            document.getElementById('audit-body').innerHTML = (s.audit.length ? s.audit : [{ ver: 'Draft', date: 'היום', txt: 'טיוטת מחקר.' }]).map(a => `
+                <div class="p-3.5 rounded-xl bg-[#0D0D0F] border border-[#222226] space-y-1">
+                    <div class="flex justify-between num font-bold text-emerald-400"><span>${a.ver}</span><span>${a.date}</span></div>
+                    <p class="text-zinc-300">${a.txt}</p>
+                </div>
+            `).join('');
+            document.getElementById('audit-modal').classList.remove('hidden');
+            document.getElementById('audit-modal').classList.add('flex');
+        }
+        function closeAuditDrawer() {
+            document.getElementById('audit-modal').classList.add('hidden');
+            document.getElementById('audit-modal').classList.remove('flex');
+        }
+
+        // LAB SCREEN
+        let activeLabTicker = 'SYM';
+        function loadLabPreset(t) {
+            activeLabTicker = t;
+            ['SYM', 'UBER', 'WIX'].forEach(k => {
+                document.getElementById('lab-btn-' + k).className = k === t ? 'px-3 py-1 rounded-lg bg-[#222226] text-white font-num font-bold' : 'px-3 py-1 rounded-lg text-zinc-400 font-num font-bold';
+            });
+            const s = DB[t];
+            document.getElementById('lab-type').value = s.thesisType;
+            document.getElementById('lab-theme').value = s.theme;
+            document.getElementById('lab-weight').value = s.targetWeight;
+            document.getElementById('lab-p1').value = s.variant;
+            document.getElementById('lab-p2').value = s.about;
+            document.getElementById('lab-p3').value = s.killSwitch;
+            document.getElementById('lab-kpis-box').innerHTML = s.kpis.map(k => `
+                <div class="p-3 rounded-xl bg-[#0D0D0F] border border-[#222226] space-y-1">
+                    <div class="num text-xs font-bold text-white">${k.name}</div>
+                    <div class="num text-xs text-emerald-400">יעד: ${k.target}</div>
+                </div>
+            `).join('');
+            document.getElementById('lab-4q-result').classList.add('hidden');
+        }
+        function toggleLab4Q() {
+            const s = DB[activeLabTicker];
+            const box = document.getElementById('lab-4q-result');
+            box.classList.remove('hidden');
+            box.innerHTML = `<strong class="text-white">תוצאות בדיקת 4 רבעונים אחורה (${s.ticker}):</strong> ` +
+                s.kpis.map(k => `${k.name}: [${k.q.join(' ')}]`).join(' • ');
+        }
+        function lockNewThesis() {
+            toast(`התזה עבור ${activeLabTicker} ננעלה כגרסה v1.0!`);
+            setTimeout(() => openCompany(activeLabTicker), 600);
+        }
+
+        function toast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            clearTimeout(window._t);
+            window._t = setTimeout(() => el.classList.add('hidden'), 2800);
+        }
+
+        // INIT
+        renderRightRail();
+        renderPortfolioTable();
+        renderCompany('NVDA');
+    </script>
+</body>
+</html>
